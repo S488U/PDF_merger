@@ -6,7 +6,7 @@ The application is built with a high-performance, cost-effective hybrid architec
 
 ![PDF Merger Screenshot](https://github.com/S488U/PDF_merger/blob/main/public/Screenshot.png)
 
----
+----
 
 ## ✨ Features
 
