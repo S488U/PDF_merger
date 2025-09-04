@@ -4,7 +4,8 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.mjs",
+    "start-express": "node index.mjs"
   },
   "keywords": [],
   "author": "",
