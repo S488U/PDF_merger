@@ -2,14 +2,26 @@
   "version": 2,
   "builds": [
     {
+      "src": "public/**/*",
+      "use": "@vercel/static"
+    },
+    {
       "src": "server.mjs",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/(.*)",
+      "src": "/(upload|merge)",
       "dest": "server.mjs"
+    },
+    {
+      "src": "/uploads/(.*)",
+      "dest": "server.mjs"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
     }
   ]
 }

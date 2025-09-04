@@ -1,23 +1,25 @@
-// server.mjs (Updated)
-
 import express from "express";
 import multer from "multer";
 import fs from "fs/promises";
 import path from "path";
-import { fileURLToPath } from "url";
-import { PDFDocument, degrees } from "pdf-lib"; // ✨ FEATURE: Import 'degrees' for rotation
+import os from "os"; // Required for Vercel's temporary directory
+import { PDFDocument, degrees } from "pdf-lib";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Vercel requires a writable directory for uploads, which is /tmp
+const UPLOADS_DIR = path.join(os.tmpdir(), 'uploads');
+
+// Ensure the temporary uploads directory exists
+await fs.mkdir(UPLOADS_DIR, { recursive: true });
 
 const app = express();
-const upload = multer({ dest: "uploads/" });
+// Configure multer to use the temporary directory
+const upload = multer({ dest: UPLOADS_DIR });
 
-app.use(express.static("public"));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Serve the dynamically created uploads from the temporary directory
+app.use("/uploads", express.static(UPLOADS_DIR));
 app.use(express.json());
 
-// [ ... /upload endpoint is unchanged ... ]
+// Upload PDFs Endpoint
 app.post("/upload", upload.array("pdfs"), async (req, res) => {
   try {
     let pages = [];
@@ -38,10 +40,9 @@ app.post("/upload", upload.array("pdfs"), async (req, res) => {
           pageIndex: i,
           originalFile: file.originalname,
           originalPage: i + 1,
-          rotation: 0, // ✨ FEATURE: Add rotation property to the page object
+          rotation: 0,
         });
       }
-
       fileMap[file.filename] = file.path;
     }
 
@@ -52,8 +53,7 @@ app.post("/upload", upload.array("pdfs"), async (req, res) => {
   }
 });
 
-
-// Merge PDFs
+// Merge PDFs Endpoint
 app.post("/merge", async (req, res) => {
   const sourceFilePaths = new Set();
   try {
@@ -62,9 +62,8 @@ app.post("/merge", async (req, res) => {
     const mergedPdf = await PDFDocument.create();
     const loadedPdfs = new Map();
 
-    for (const pageData of order) { // ✨ FEATURE: Renamed to pageData for clarity
+    for (const pageData of order) {
       const { file, pageIndex, rotation } = pageData;
-
       let pdfDoc;
       if (loadedPdfs.has(file)) {
         pdfDoc = loadedPdfs.get(file);
@@ -77,25 +76,25 @@ app.post("/merge", async (req, res) => {
       }
 
       const [copiedPage] = await mergedPdf.copyPages(pdfDoc, [pageIndex]);
-
-      // ✨ FEATURE: Apply the specified rotation if it's not 0
       if (rotation) {
         copiedPage.setRotation(degrees(rotation));
       }
-
       mergedPdf.addPage(copiedPage);
     }
 
     const pdfBytes = await mergedPdf.save();
     const outName = `${newName || "merged"}.pdf`;
-    const outPath = path.join(__dirname, "uploads", outName);
+    // Ensure the output path is also in the temporary directory
+    const outPath = path.join(UPLOADS_DIR, outName);
     await fs.writeFile(outPath, pdfBytes);
 
     res.download(outPath, outName, async (err) => {
       if (err) console.error("Download error:", err);
+      // Clean up the generated merged PDF
       await fs.unlink(outPath).catch(err => console.error("Error unlinking output:", err));
     });
-  } catch (err) {
+  } catch (err)
+  {
     console.error("Merge Error:", err);
     res.status(500).json({ error: "Failed to merge PDFs." });
   } finally {
@@ -106,6 +105,5 @@ app.post("/merge", async (req, res) => {
   }
 });
 
-app.listen(3000, () =>
-  console.log("🚀 Server running at http://localhost:3000")
-);  
+// Vercel handles the server creation. We just need to export the app.
+export default app;
