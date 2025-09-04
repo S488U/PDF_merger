@@ -1,0 +1,1 @@
+This web application is vibe coded. 
