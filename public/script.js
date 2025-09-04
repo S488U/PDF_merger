@@ -1,5 +1,4 @@
-// script.js (Corrected and Complete)
-
+// Configure pdf.js worker to improve performance and avoid warnings
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
 let pages = [];
@@ -30,10 +29,13 @@ uploadForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const files = pdfsInput.files;
     if (!files.length) return;
+
     const formData = new FormData();
     for (const f of files) formData.append("pdfs", f);
+
     const xhr = new XMLHttpRequest();
     xhr.open("POST", "/upload", true);
+
     xhr.onload = async function() {
         setLoadingState(uploadBtn, false, "Upload");
         progressContainer.classList.add("hidden");
@@ -41,30 +43,30 @@ uploadForm.addEventListener("submit", (e) => {
         if (xhr.status === 200) {
             const data = JSON.parse(xhr.responseText);
             pages = pages.concat(data.pages);
-            fileMap = { ...fileMap,
-                ...data.fileMap
-            };
+            fileMap = { ...fileMap, ...data.fileMap };
             uploadedFiles = uploadedFiles.concat(data.fileNames);
             showFileList();
-            renderPages(true);
-            await cachePagesBatched(data.pages);
-            renderPages();
+            renderPages(true); // Initial skeleton render
+            await cachePagesBatched(data.pages); // Efficiently generate thumbnails
         } else {
             console.error("Upload failed:", xhr.responseText);
             alert("An error occurred during upload. Please check the console.");
         }
     };
+
     xhr.onerror = function() {
         setLoadingState(uploadBtn, false, "Upload");
         progressContainer.classList.add("hidden");
         alert("A network error occurred. Please try again.");
     };
+
     xhr.upload.onprogress = function(event) {
         if (event.lengthComputable) {
             const percentComplete = (event.loaded / event.total) * 100;
             progressBar.style.width = percentComplete + '%';
         }
     };
+
     setLoadingState(uploadBtn, true, "Uploading...");
     progressContainer.classList.remove("hidden");
     progressBar.style.width = '0%';
@@ -78,14 +80,8 @@ mergeBtn.addEventListener("click", async () => {
     try {
         const res = await fetch("/merge", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                order: pages,
-                fileMap,
-                newName
-            }),
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ order: pages, fileMap, newName }),
         });
         if (res.ok) {
             const blob = await res.blob();
@@ -271,39 +267,42 @@ function renderPages(skeleton = false) {
     updateMergeButtonState();
 }
 
-
 // --- UTILITY FUNCTIONS ---
 
-async function cachePagesBatched(newPages, batchSize = 5) {
-    for (let i = 0; i < newPages.length; i += batchSize) {
-        const batch = newPages.slice(i, i + batchSize);
-        await Promise.all(batch.map(async (p) => {
-            if (pageCache[p.id]) return;
-            try {
-                const pdfBytes = await fetch(`/uploads/${p.file}`).then(r => r.arrayBuffer());
-                const pdf = await pdfjsLib.getDocument({
-                    data: pdfBytes
-                }).promise;
-                const page = await pdf.getPage(p.pageIndex + 1);
-                const viewport = page.getViewport({
-                    scale: 0.5
-                });
+async function cachePagesBatched(newPages) {
+    const pagesByFile = newPages.reduce((acc, page) => {
+        if (!pageCache[page.id]) {
+            if (!acc[page.file]) {
+                acc[page.file] = [];
+            }
+            acc[page.file].push(page);
+        }
+        return acc;
+    }, {});
+
+    for (const filename in pagesByFile) {
+        const pagesToRenderForFile = pagesByFile[filename];
+        try {
+            const pdfBytes = await fetch(`/uploads/${filename}`).then(r => r.arrayBuffer());
+            const pdfDoc = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
+
+            await Promise.all(pagesToRenderForFile.map(async (page) => {
+                const pdfPage = await pdfDoc.getPage(page.pageIndex + 1);
+                const viewport = pdfPage.getViewport({ scale: 0.5 });
                 const canvas = document.createElement("canvas");
                 const context = canvas.getContext("2d");
                 canvas.width = viewport.width;
                 canvas.height = viewport.height;
-                await page.render({
-                    canvasContext: context,
-                    viewport
-                }).promise;
-                pageCache[p.id] = canvas.toDataURL("image/jpeg", 0.8);
-            } catch (error) {
-                console.error(`Failed to render page ${p.id}:`, error);
-            }
-        }));
+                await pdfPage.render({ canvasContext: context, viewport }).promise;
+                pageCache[page.id] = canvas.toDataURL("image/jpeg", 0.8);
+            }));
+        } catch (error) {
+            console.error(`Failed to process thumbnails for file ${filename}:`, error);
+        }
         renderPages();
     }
 }
+
 
 async function openModal(page) {
     modalOverlay.classList.remove("hidden");
@@ -327,21 +326,14 @@ async function getHighResPageDataUrl(page) {
     }
     try {
         const pdfBytes = await fetch(`/uploads/${page.file}`).then(r => r.arrayBuffer());
-        const pdf = await pdfjsLib.getDocument({
-            data: pdfBytes
-        }).promise;
+        const pdf = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
         const pdfPage = await pdf.getPage(page.pageIndex + 1);
-        const viewport = pdfPage.getViewport({
-            scale: 2.0
-        });
+        const viewport = pdfPage.getViewport({ scale: 2.0 });
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d");
         canvas.width = viewport.width;
         canvas.height = viewport.height;
-        await pdfPage.render({
-            canvasContext: context,
-            viewport
-        }).promise;
+        await pdfPage.render({ canvasContext: context, viewport }).promise;
         const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
         highResPageCache[page.id] = dataUrl;
         return dataUrl;
