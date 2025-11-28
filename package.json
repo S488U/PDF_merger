@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.mjs",
-    "start-express": "node index.mjs"
+    "start-express": "node index.mjs",
+    "dev": "nodemon index.mjs"
   },
   "keywords": [],
   "author": "",
