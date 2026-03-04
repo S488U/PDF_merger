@@ -1,6 +1,7 @@
-<!-- index.html (Final Polished Version) -->
+<!-- START OF FILE public/index.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,62 +9,370 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' }
+  </script>
   <style>
-    #pagesContainer {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 1rem;
+    :root {
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --surface-muted: #f7f7f8;
+      --border: #e5e7eb;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --accent: #111827;
+      --accent-strong: #020617;
+      --ring: rgba(15, 23, 42, 0.12);
+      --btn-bg: #111827;
+      --btn-bg-hover: #020617;
+      --btn-fg: #ffffff;
+      --icon-fg: #475569;
+      --badge-bg: #111827;
+      --badge-fg: #ffffff;
     }
-    #pagesContainer>div {
-      touch-action: manipulation;
+
+    .dark {
+      --bg: #0b0b0c;
+      --surface: #111113;
+      --surface-muted: #151518;
+      --border: #25252a;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #f8fafc;
+      --accent-strong: #ffffff;
+      --ring: rgba(248, 250, 252, 0.2);
+      --btn-bg: #f8fafc;
+      --btn-bg-hover: #e2e8f0;
+      --btn-fg: #020617;
+      --icon-fg: #cbd5e1;
+      --badge-bg: #f8fafc;
+      --badge-fg: #020617;
     }
-    /* ✨ FIX: Removed the redundant style block for #modalContent */
-    @media (max-width: 768px) {
-      #pagesContainer {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.75rem;
-      }
+
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(1100px 520px at 50% -220px, rgba(120, 120, 140, 0.1), transparent 70%), var(--bg);
+      color: var(--text);
+    }
+
+    .surface {
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      border-color: var(--border);
+      box-shadow: 0 10px 30px -18px rgba(15, 23, 42, 0.35);
+    }
+
+    .subtle-text { color: var(--text-muted); }
+    .outline-ring:focus { box-shadow: 0 0 0 4px var(--ring); }
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    [role="button"]:focus-visible {
+      outline: 2px solid color-mix(in srgb, var(--text) 35%, transparent);
+      outline-offset: 2px;
+    }
+    .btn-primary {
+      background: var(--btn-bg);
+      color: var(--btn-fg);
+    }
+    .btn-primary:hover { background: var(--btn-bg-hover); }
+    .success-toast {
+      background: color-mix(in srgb, var(--surface) 96%, transparent);
+      border: 1px solid var(--border);
+      color: var(--text);
+      box-shadow: 0 20px 35px -28px rgba(15, 23, 42, 0.6);
+    }
+    .notice-toast {
+      background: color-mix(in srgb, var(--surface) 96%, transparent);
+      border: 1px solid var(--border);
+      color: var(--text);
+      box-shadow: 0 20px 35px -28px rgba(15, 23, 42, 0.6);
+    }
+    .walkthrough-step {
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+    }
+    .card-dragging {
+      transform: scale(0.985);
+      box-shadow: 0 18px 34px -24px rgba(15, 23, 42, 0.75) !important;
+    }
+    .panel-glass {
+      background: color-mix(in srgb, var(--surface) 94%, transparent);
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 35px -28px rgba(15, 23, 42, 0.65);
+    }
+
+    /* 1. CRITICAL FIX: Allow Scrolling + Prevent Selection */
+    .prevent-select {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      touch-action: pan-y !important; 
+    }
+
+    /* 2. Native Drag Visuals */
+    /* Only the "Ghost" (the hole in the list) is styled in CSS for Native drag.
+       The "Drag Image" is generated automatically by the browser. */
+    .sortable-ghost {
+      opacity: 0.2;
+      background: #e0e7ff; 
+      border: 2px dashed #6366f1;
+    }
+    .dark .sortable-ghost {
+      background: #374151;
+      border-color: #60a5fa;
+    }
+
+    /* Scrollbar Polish */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .dark ::-webkit-scrollbar-thumb { background: #475569; }
+
+    .fade-in { animation: fadeIn 0.3s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .safe-footer {
+      padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+    }
+
+    .safe-close {
+      top: calc(1rem + env(safe-area-inset-top));
+      right: calc(1rem + env(safe-area-inset-right));
     }
   </style>
 </head>
 
-<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center p-4 md:p-8">
+<body
+  class="min-h-screen pb-28 transition-colors duration-300">
 
-  <!-- [ ... The main page content is unchanged ... ] -->
-  <h1 class="text-3xl md:text-4xl font-bold mb-6 md:mb-8 tracking-wide text-center">📑 PDF Merger Tool</h1>
-  <form id="uploadForm" class="flex flex-col md:flex-row gap-3 items-center bg-gray-800 p-4 md:p-5 rounded-2xl shadow-xl w-full max-w-2xl mb-4">
-    <input type="file" name="pdfs" id="pdfs" multiple accept="application/pdf" class="file:mr-3 file:rounded-lg file:border-0 file:bg-purple-600 file:text-white file:px-4 file:py-2 hover:file:bg-purple-700 text-gray-300 w-full md:w-auto transition">
-    <button type="submit" class="bg-purple-600 px-6 py-2 rounded-lg hover:bg-purple-700 active:scale-95 transition w-full md:w-auto">Upload</button>
-  </form>
-  <div id="progressContainer" class="w-full max-w-2xl hidden mb-4">
-    <div class="bg-gray-700 rounded-full h-2.5">
-      <div id="progressBar" class="bg-purple-600 h-2.5 rounded-full" style="width: 0%"></div>
+  <!-- HEADER -->
+  <header class="sticky top-0 z-30 border-b backdrop-blur-lg surface relative">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="4" y="3.5" width="16" height="17" rx="2.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M8 8h8M8 12h6M8 16h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <h1 class="text-base sm:text-lg font-semibold tracking-tight">PDF Merger</h1>
+      </div>
+      <div class="flex items-center gap-2">
+        <!-- Theme Toggle -->
+        <button id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode"
+          class="outline-ring w-9 h-9 inline-flex items-center justify-center rounded-md border transition">
+          <svg id="sunIcon" class="w-4 h-4 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <svg id="moonIcon" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+          </svg>
+        </button>
+        <button id="settingsToggle" aria-label="Open settings" title="Settings" class="outline-ring w-9 h-9 inline-flex items-center justify-center rounded-md border transition">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M12 8.5A3.5 3.5 0 1 0 12 15.5 3.5 3.5 0 0 0 12 8.5z" stroke-width="1.7"/>
+            <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 0 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 0 1-4 0v-.1a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 0 1 0-4h.1a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2h.1a1 1 0 0 0 .6-.9V4a2 2 0 0 1 4 0v.1a1 1 0 0 0 .6.9h.1a1 1 0 0 0 1.1-.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1v.1a1 1 0 0 0 .9.6H20a2 2 0 0 1 0 4h-.1a1 1 0 0 0-.9.6z" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div id="settingsMenu" class="hidden absolute z-40 right-4 top-14 w-[320px] rounded-xl p-4 panel-glass">
+      <p class="text-sm font-semibold mb-3">Settings</p>
+      <label class="text-xs subtle-text block mb-1">Default output pattern</label>
+      <input id="defaultNamePattern" type="text" class="w-full h-9 px-3 rounded-md border text-sm mb-3" style="background:var(--surface); border-color:var(--border);" placeholder="merged-{date}">
+      <label class="flex items-center gap-2 text-sm mb-3 select-none">
+        <input id="autoResetAfterMerge" type="checkbox" class="w-4 h-4">
+        Auto reset after merge
+      </label>
+      <div class="text-xs subtle-text border rounded-md p-2" style="border-color:var(--border);">
+        Upload cleanup policy: source files are removed on server after a successful merge download.
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto p-4 md:p-8 space-y-8">
+
+    <!-- UPLOAD SECTION -->
+    <section
+      class="surface rounded-2xl border p-6 md:p-10 text-center transition-colors">
+      <h2 class="text-xl sm:text-2xl font-semibold mb-2">Upload your documents</h2>
+      <p class="subtle-text text-sm mb-5">Add PDFs, rearrange pages, then export a clean merged file.</p>
+      <div id="walkthroughCard" class="mb-5 text-left">
+        <div class="walkthrough-step rounded-xl p-3">
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-sm font-semibold">Quick Start</p>
+          <button id="dismissWalkthroughBtn" aria-label="Dismiss quick start" class="w-7 h-7 inline-flex items-center justify-center rounded-full border text-xs" style="border-color:var(--border); color:var(--text-muted);">✕</button>
+          </div>
+          <div class="grid sm:grid-cols-3 gap-2 text-xs subtle-text">
+            <div class="walkthrough-step rounded-md p-2">
+              <p class="font-semibold" style="color:var(--text)">1. Upload</p>
+              <p>Select one or more PDFs.</p>
+            </div>
+            <div class="walkthrough-step rounded-md p-2">
+              <p class="font-semibold" style="color:var(--text)">2. Arrange</p>
+              <p>Long press or drag handle to reorder pages.</p>
+            </div>
+            <div class="walkthrough-step rounded-md p-2">
+              <p class="font-semibold" style="color:var(--text)">3. Merge</p>
+              <p>Choose name and download your merged file.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Drop Zone -->
+      <div id="dropZone"
+        class="flex flex-col items-center justify-center w-full h-40 border border-dashed rounded-xl cursor-pointer transition relative"
+        style="border-color:var(--border); background:var(--surface-muted);">
+        <div class="flex flex-col items-center justify-center pt-5 pb-6 pointer-events-none">
+          <svg class="w-8 h-8 mb-3 subtle-text" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+          </svg>
+          <p class="text-sm subtle-text"><span class="font-semibold" style="color:var(--text)">Click to upload</span> or drag files here</p>
+        </div>
+        <input type="file" name="pdfs" id="pdfs" multiple accept="application/pdf"
+          class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+      </div>
+
+      <!-- Staging Area -->
+      <div id="stagingArea" class="mt-4 hidden text-left max-w-lg mx-auto">
+        <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 dark:text-gray-400">Ready to Process:</p>
+        <ul id="stagingList" class="space-y-2 text-sm"></ul>
+        <button id="processBtn"
+          class="btn-primary mt-4 w-full font-medium py-2.5 rounded-lg active:scale-95 transition shadow-sm">Process
+          Selected Files</button>
+      </div>
+
+      <!-- Progress -->
+      <div id="progressContainer" class="w-full max-w-md mx-auto mt-4 hidden">
+        <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+          <span>Uploading...</span><span id="progressText">0%</span>
+        </div>
+        <div class="bg-gray-100 rounded-full h-2 w-full overflow-hidden dark:bg-gray-700">
+          <div id="progressBar" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 0%">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Source Files List -->
+    <div id="fileList" class="hidden">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-sm font-semibold uppercase tracking-wider subtle-text">Source Files</h3>
+      </div>
+      <div id="pageFilterPanel" class="hidden mb-3 p-3 rounded-xl panel-glass">
+        <p class="text-xs font-semibold uppercase tracking-wide subtle-text mb-2">Select Pages From File</p>
+        <div class="grid sm:grid-cols-[minmax(0,1fr)_130px_minmax(0,130px)_auto] gap-2 items-center">
+          <select id="filterFileSelect" class="h-9 px-2 rounded-md border text-sm" style="background:var(--surface); border-color:var(--border);"></select>
+          <select id="filterModeSelect" class="h-9 px-2 rounded-md border text-sm" style="background:var(--surface); border-color:var(--border);">
+            <option value="all">All</option>
+            <option value="odd">Odd</option>
+            <option value="even">Even</option>
+            <option value="range">Range</option>
+          </select>
+          <input id="filterRangeInput" type="text" placeholder="1-3,7" class="h-9 px-2 rounded-md border text-sm hidden" style="background:var(--surface); border-color:var(--border);">
+          <button id="applyFilterBtn" class="btn-primary h-9 px-3 rounded-md text-sm">Apply</button>
+        </div>
+      </div>
+      <ul id="fileListUl"
+        class="surface rounded-xl border divide-y transition-colors" style="border-color:var(--border);">
+      </ul>
+    </div>
+
+    <!-- GRID AREA (Mobile: cols-2) -->
+    <div>
+      <div class="flex items-center justify-between mb-4 gap-2">
+        <h3 class="text-lg font-semibold">Pages Preview</h3>
+        <div class="flex items-center gap-2">
+          <span class="text-xs px-2 py-1 rounded border subtle-text" style="border-color:var(--border)">Drag card to reorder</span>
+          <span class="hidden md:inline text-xs px-2 py-1 rounded border subtle-text" style="border-color:var(--border)">Keyboard: Arrows, R, Del</span>
+        </div>
+      </div>
+      <div id="pagesContainer" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 select-none">
+      </div>
+    </div>
+  </main>
+
+  <!-- STICKY FOOTER -->
+  <div
+    class="safe-footer fixed bottom-0 left-0 right-0 p-4 z-40 transition-colors surface border-t">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row gap-3 items-center justify-between">
+      <input id="newName" type="text" placeholder="merged-filename"
+        class="w-full sm:w-64 px-4 py-2 border rounded-lg outline-none text-sm outline-ring"
+        style="background:var(--surface); border-color:var(--border);"
+        disabled>
+      <button id="mergeBtn"
+        class="btn-primary w-full sm:w-auto font-semibold py-2.5 px-8 rounded-lg active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled>Download Merged PDF</button>
     </div>
   </div>
-  <div id="fileList" class="w-full max-w-4xl bg-gray-800 rounded-2xl p-4 md:p-5 shadow-xl hidden">
-    <h2 class="text-lg font-semibold mb-2">Uploaded PDFs</h2>
-    <ul id="fileListUl" class="space-y-2"></ul>
-  </div>
-  <div class="w-full max-w-4xl mt-6 md:mt-8 px-4 md:px-0">
-    <div id="pagesContainer"></div>
-  </div>
-  <div class="flex flex-col md:flex-row gap-3 mt-6 md:mt-8 w-full max-w-2xl flex-shrink-0">
-    <input id="newName" type="text" placeholder="New file name" class="px-4 py-2 rounded-lg text-black flex-1 disabled:bg-gray-500">
-    <button id="mergeBtn" class="bg-green-600 px-6 py-2 rounded-lg hover:bg-green-700 active:scale-95 transition disabled:bg-green-800 disabled:opacity-60">Merge PDFs</button>
+
+  <!-- PREVIEW MODAL -->
+  <div id="modalOverlay"
+    class="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="relative max-w-5xl w-full flex justify-center">
+      <img id="modalImage" src="" alt="Preview"
+        class="max-h-[85vh] max-w-full rounded shadow-2xl object-contain bg-white">
+      <div id="modalLoader" class="absolute inset-0 flex items-center justify-center text-white">Loading...</div>
+    </div>
+    <button id="modalClose"
+      class="safe-close absolute rounded-full w-10 h-10 inline-flex items-center justify-center leading-none border transition"
+      style="color:#fff; border-color:rgba(255,255,255,0.25); background:rgba(0,0,0,0.35);">✕</button>
   </div>
 
-  <!-- Modal for Page Preview -->
-  <div id="modalOverlay" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-50">
-    <div id="modalContent" class="relative">
-       <!-- ✨ FIX: Added max-w-[90vw] and max-h-[90vh] to ensure the image always fits the screen -->
-      <img id="modalImage" src="" alt="Page Preview" class="rounded-md object-contain max-w-[90vw] max-h-[90vh]">
-      <div id="modalLoader" class="text-white text-center">Loading high-resolution preview...</div>
+  <div id="successToast" role="status" aria-live="polite" class="hidden fixed z-50 right-4 left-4 sm:left-auto sm:w-[360px] bottom-24 sm:bottom-6 success-toast rounded-xl p-4">
+    <div class="flex items-start gap-3">
+      <div class="w-8 h-8 rounded-full inline-flex items-center justify-center" style="background: color-mix(in srgb, #22c55e 18%, transparent); color: #16a34a;">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-semibold">Merge complete</p>
+        <p class="text-xs subtle-text mt-1">Download started. Start a new merge?</p>
+        <div class="mt-3 flex items-center gap-2">
+          <button id="startNewMergeBtn" class="btn-primary px-3 h-8 rounded-md text-xs font-medium">Start New Merge</button>
+          <button id="dismissSuccessToastBtn" class="px-3 h-8 rounded-md text-xs font-medium border" style="border-color:var(--border);">Close</button>
+        </div>
+      </div>
     </div>
-    <button id="modalClose" class="absolute top-4 right-4 bg-white/20 hover:bg-white/40 rounded-full w-10 h-10 flex items-center justify-center text-white text-2xl transition">
-      &times;
-    </button>
+  </div>
+
+  <div id="noticeToast" role="alert" aria-live="assertive" class="hidden fixed z-50 right-4 left-4 sm:left-auto sm:w-[360px] top-20 notice-toast rounded-xl p-4">
+    <div class="flex items-start gap-3">
+      <div id="noticeToastIconWrap" class="w-8 h-8 rounded-full inline-flex items-center justify-center">
+        <svg id="noticeToastIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M12 8v5m0 3h.01M10.29 3.86l-8.24 14A1 1 0 0 0 2.91 19h18.18a1 1 0 0 0 .86-1.5l-8.24-14a1 1 0 0 0-1.72 0z" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p id="noticeToastTitle" class="text-sm font-semibold">Something went wrong</p>
+        <p id="noticeToastMessage" class="text-xs subtle-text mt-1">Please try again.</p>
+      </div>
+      <button id="dismissNoticeToastBtn" class="w-8 h-8 inline-flex items-center justify-center rounded-full border transition" style="border-color:var(--border); color:var(--text-muted)">✕</button>
+    </div>
+  </div>
+
+  <div id="dragStatusChip" role="status" aria-live="polite" class="hidden fixed z-50 left-1/2 -translate-x-1/2 bottom-32 sm:bottom-10 px-3 h-8 rounded-full text-xs font-medium border inline-flex items-center gap-2"
+    style="background:color-mix(in srgb, var(--surface) 96%, transparent); border-color:var(--border); color:var(--text);">
+    <span class="w-2 h-2 rounded-full" style="background:#22c55e;"></span>
+    Dragging page...
+  </div>
+
+  <div id="undoToast" role="status" aria-live="polite" class="hidden fixed z-50 right-4 left-4 sm:left-auto sm:w-[360px] bottom-36 sm:bottom-20 notice-toast rounded-xl p-4">
+    <div class="flex items-center justify-between gap-3">
+      <p id="undoToastMessage" class="text-sm">Item removed</p>
+      <div class="flex items-center gap-2">
+        <button id="undoActionBtn" class="btn-primary px-3 h-8 rounded-md text-xs font-medium">Undo</button>
+        <button id="dismissUndoToastBtn" class="w-8 h-8 inline-flex items-center justify-center rounded-full border text-xs" style="border-color:var(--border); color:var(--text-muted);">✕</button>
+      </div>
+    </div>
   </div>
 
   <script src="script.js"></script>
 </body>
+
 </html>
