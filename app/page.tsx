@@ -34,6 +34,7 @@ export default function Home() {
     clearSelection,
     rotateSelectedPages,
     deleteSelectedPages,
+    clearAll,
     settings,
     updateSettings,
   } = usePdfStore();
@@ -132,11 +133,7 @@ export default function Home() {
 
                         <button
                           type="button"
-                          onClick={() => {
-                            if (confirm(`Delete ${selectedPageIds.length} selected pages?`)) {
-                              deleteSelectedPages();
-                            }
-                          }}
+                          onClick={() => deleteSelectedPages()}
                           className="h-8 px-2.5 text-xs font-medium rounded-md bg-red-600 text-white hover:bg-red-700 flex items-center gap-1.5 transition"
                           title="Delete selected pages"
                         >
@@ -170,6 +167,16 @@ export default function Home() {
                               <span>Select all ({pages.length})</span>
                             </>
                           )}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => clearAll()}
+                          className="h-8 px-2.5 rounded-md border border-zinc-200 dark:border-zinc-800 hover:bg-red-50 dark:hover:bg-red-950/30 text-zinc-500 hover:text-red-600 dark:hover:text-red-400 text-xs font-medium flex items-center gap-1.5 transition"
+                          title="Clear all documents from canvas (Ctrl+Z to undo)"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Clear canvas</span>
                         </button>
                       </div>
                     )}

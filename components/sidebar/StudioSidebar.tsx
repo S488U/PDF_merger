@@ -236,13 +236,11 @@ export function StudioSidebar({
                 </p>
               </div>
 
-              {sourceFiles.length > 0 && (
+              {(sourceFiles.length > 0 || pages.length > 0) && (
                 <button
                   type="button"
-                  onClick={() => {
-                    if (confirm('Clear all documents from canvas?')) clearAll();
-                  }}
-                  className="text-xs text-red-600 dark:text-red-400 hover:underline font-medium transition"
+                  onClick={() => clearAll()}
+                  className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:underline font-medium transition"
                 >
                   Clear all
                 </button>

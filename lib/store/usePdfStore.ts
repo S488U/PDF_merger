@@ -516,20 +516,24 @@ export const usePdfStore = create<PdfState>((set, get) => ({
 
   clearAll: () => {
     const { pages, sourceFiles, undoStack } = get();
-    if (pages.length === 0) return;
+    if (pages.length === 0 && sourceFiles.length === 0) return;
 
     fileBufferMap.clear();
     set({
       pages: [],
       sourceFiles: [],
       selectedPageIds: [],
+      activePreviewPageId: null,
+      activeSplitPageId: null,
+      isProcessing: false,
+      processingMessage: '',
       undoStack: [
         ...undoStack.slice(-14),
-        { pages: [...pages], sourceFiles: [...sourceFiles], description: 'Clear all' },
+        { pages: [...pages], sourceFiles: [...sourceFiles], description: 'Clear all documents' },
       ],
       redoStack: [],
     });
-    get().addToast('Canvas cleared (Ctrl+Z to undo)', 'info');
+    get().addToast('Cleared all documents and pages (Ctrl+Z to undo)', 'info');
   },
 
   setOutputName: (name: string) => set({ outputName: name }),

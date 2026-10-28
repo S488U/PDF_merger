@@ -93,7 +93,7 @@ export function Header({
 
       {/* Right: History controls, Shortcuts, Theme, Settings */}
       <div className="flex items-center gap-1.5 sm:gap-2">
-        {pages.length > 0 && (
+        {(pages.length > 0 || sourceFiles.length > 0) && (
           <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-md border border-zinc-200 dark:border-zinc-800">
             <button
               type="button"
@@ -131,13 +131,9 @@ export function Header({
 
             <button
               type="button"
-              onClick={() => {
-                if (confirm('Clear entire canvas? (Ctrl+Z to undo)')) {
-                  clearAll();
-                }
-              }}
+              onClick={() => clearAll()}
               className="h-7 w-7 rounded flex items-center justify-center text-zinc-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
-              title="Clear all pages"
+              title="Clear all (Ctrl+Z to undo)"
               aria-label="Clear all pages"
             >
               <Trash2 className="w-3.5 h-3.5" />
