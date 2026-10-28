@@ -98,20 +98,20 @@ export function SplitToolModal() {
       ref={dialogRef}
       onClose={() => setActiveSplitPageId(null)}
       aria-labelledby="split-dialog-title"
-      className="p-0 rounded-2xl bg-zinc-900 border border-white/10 shadow-2xl max-w-5xl w-[95vw] backdrop:bg-black/80 m-auto text-zinc-100 overflow-hidden"
+      className="p-0 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-2xl max-w-5xl w-[95vw] backdrop:bg-black/75 m-auto text-zinc-900 dark:text-zinc-100 overflow-hidden"
     >
       <div className="flex flex-col h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 bg-zinc-950/80 backdrop-blur-md shrink-0">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-900 dark:text-zinc-100">
               <Scissors className="w-4 h-4" />
             </div>
             <div>
-              <h3 id="split-dialog-title" className="text-sm font-bold text-zinc-100">
+              <h3 id="split-dialog-title" className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                 Split Page Into 2 Sections
               </h3>
-              <p className="text-[11px] text-zinc-400">
+              <p className="text-xs text-zinc-500">
                 {activePage.fileName} • Page {activePage.displayPageNumber}
               </p>
             </div>
@@ -120,8 +120,8 @@ export function SplitToolModal() {
           <button
             type="button"
             onClick={() => setActiveSplitPageId(null)}
-            className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition"
-            aria-label="Close split modal"
+            className="h-8 w-8 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center justify-center transition"
+            aria-label="Close"
           >
             <X className="w-4 h-4" />
           </button>
@@ -130,11 +130,11 @@ export function SplitToolModal() {
         {/* Content Body: Canvas Preview + Aside Controls */}
         <div className="flex flex-col lg:flex-row flex-1 overflow-hidden min-h-0">
           {/* Interactive Split Canvas */}
-          <div className="flex-1 overflow-auto p-4 sm:p-6 flex items-center justify-center bg-zinc-950">
+          <div className="flex-1 overflow-auto p-4 sm:p-6 flex items-center justify-center bg-zinc-100 dark:bg-zinc-950">
             {isLoading ? (
               <div className="flex flex-col items-center gap-3 text-zinc-400">
-                <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
-                <span className="text-xs font-medium">Preparing visual split guide...</span>
+                <Loader2 className="w-7 h-7 animate-spin" />
+                <span className="text-xs font-medium">Preparing split view...</span>
               </div>
             ) : previewSrc ? (
               <div
@@ -151,46 +151,42 @@ export function SplitToolModal() {
 
                 {direction === 'horizontal' ? (
                   <>
-                    {/* Horizontal Draggable Divider */}
                     <div
                       style={{ top: `${splitPercent}%` }}
                       onPointerDown={handlePointerDown}
                       className="absolute left-0 right-0 h-7 -translate-y-1/2 cursor-row-resize z-20 flex items-center group"
                     >
                       <div className="w-full h-0.5 bg-red-500 shadow-md group-hover:h-1 transition-all" />
-                      <div className="absolute right-3 px-2 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-bold shadow-md tracking-wider">
+                      <div className="absolute right-3 px-2 py-0.5 rounded bg-red-600 text-white text-[10px] font-bold shadow-md tracking-wider">
                         SPLIT {splitPercent}%
                       </div>
                     </div>
 
-                    {/* Section Badges */}
-                    <div className="absolute top-2 left-2 text-[10px] font-semibold px-2 py-0.5 rounded bg-indigo-600/90 text-white backdrop-blur-xs pointer-events-none shadow-xs">
-                      Part 1 (Top: {splitPercent}%)
+                    <div className="absolute top-2 left-2 text-[10px] font-semibold px-2 py-0.5 rounded bg-zinc-900/80 text-white backdrop-blur-xs pointer-events-none">
+                      Top ({splitPercent}%)
                     </div>
-                    <div className="absolute bottom-2 left-2 text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-600/90 text-white backdrop-blur-xs pointer-events-none shadow-xs">
-                      Part 2 (Bottom: {100 - splitPercent}%)
+                    <div className="absolute bottom-2 left-2 text-[10px] font-semibold px-2 py-0.5 rounded bg-zinc-900/80 text-white backdrop-blur-xs pointer-events-none">
+                      Bottom ({100 - splitPercent}%)
                     </div>
                   </>
                 ) : (
                   <>
-                    {/* Vertical Draggable Divider */}
                     <div
                       style={{ left: `${splitPercent}%` }}
                       onPointerDown={handlePointerDown}
                       className="absolute top-0 bottom-0 w-7 -translate-x-1/2 cursor-col-resize z-20 flex flex-col items-center group"
                     >
                       <div className="h-full w-0.5 bg-red-500 shadow-md group-hover:w-1 transition-all" />
-                      <div className="absolute top-3 px-2 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-bold shadow-md tracking-wider whitespace-nowrap">
+                      <div className="absolute top-3 px-2 py-0.5 rounded bg-red-600 text-white text-[10px] font-bold shadow-md tracking-wider whitespace-nowrap">
                         SPLIT {splitPercent}%
                       </div>
                     </div>
 
-                    {/* Section Badges */}
-                    <div className="absolute top-2 left-2 text-[10px] font-semibold px-2 py-0.5 rounded bg-indigo-600/90 text-white backdrop-blur-xs pointer-events-none shadow-xs">
-                      Part 1 (Left: {splitPercent}%)
+                    <div className="absolute top-2 left-2 text-[10px] font-semibold px-2 py-0.5 rounded bg-zinc-900/80 text-white backdrop-blur-xs pointer-events-none">
+                      Left ({splitPercent}%)
                     </div>
-                    <div className="absolute top-2 right-2 text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-600/90 text-white backdrop-blur-xs pointer-events-none shadow-xs">
-                      Part 2 (Right: {100 - splitPercent}%)
+                    <div className="absolute top-2 right-2 text-[10px] font-semibold px-2 py-0.5 rounded bg-zinc-900/80 text-white backdrop-blur-xs pointer-events-none">
+                      Right ({100 - splitPercent}%)
                     </div>
                   </>
                 )}
@@ -199,21 +195,20 @@ export function SplitToolModal() {
           </div>
 
           {/* Control Panel Aside */}
-          <div className="w-full lg:w-80 p-5 border-t lg:border-t-0 lg:border-l border-white/10 flex flex-col justify-between gap-5 bg-zinc-900/95 shrink-0">
+          <div className="w-full lg:w-76 p-5 border-t lg:border-t-0 lg:border-l border-zinc-200 dark:border-zinc-800 flex flex-col justify-between gap-5 bg-white dark:bg-zinc-950 shrink-0">
             <div className="space-y-5">
-              {/* Split Orientation Selector */}
               <div className="space-y-2">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                   Cut Direction
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setDirection('horizontal')}
-                    className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold border transition ${
+                    className={`h-9 flex items-center justify-center gap-1.5 rounded-md text-xs font-semibold border transition ${
                       direction === 'horizontal'
-                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400 shadow-xs'
-                        : 'border-white/10 text-zinc-300 hover:bg-zinc-800'
+                        ? 'border-zinc-900 bg-zinc-900 text-zinc-50 dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900'
+                        : 'border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                     }`}
                   >
                     <SplitSquareHorizontal className="w-4 h-4" />
@@ -223,10 +218,10 @@ export function SplitToolModal() {
                   <button
                     type="button"
                     onClick={() => setDirection('vertical')}
-                    className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold border transition ${
+                    className={`h-9 flex items-center justify-center gap-1.5 rounded-md text-xs font-semibold border transition ${
                       direction === 'vertical'
-                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400 shadow-xs'
-                        : 'border-white/10 text-zinc-300 hover:bg-zinc-800'
+                        ? 'border-zinc-900 bg-zinc-900 text-zinc-50 dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900'
+                        : 'border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                     }`}
                   >
                     <SplitSquareVertical className="w-4 h-4" />
@@ -235,11 +230,10 @@ export function SplitToolModal() {
                 </div>
               </div>
 
-              {/* Slider & Quick Presets */}
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs font-medium">
-                  <span className="text-zinc-400">Divider Ratio:</span>
-                  <span className="font-mono font-bold text-indigo-400">
+                  <span className="text-zinc-500">Split Ratio:</span>
+                  <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">
                     {splitPercent}% / {100 - splitPercent}%
                   </span>
                 </div>
@@ -250,21 +244,20 @@ export function SplitToolModal() {
                   max="90"
                   value={splitPercent}
                   onChange={(e) => setSplitPercent(parseInt(e.target.value, 10))}
-                  className="w-full accent-indigo-500 cursor-pointer"
+                  className="w-full accent-zinc-900 dark:accent-zinc-100 cursor-pointer"
                 />
 
-                {/* Preset Chips */}
                 <div className="flex items-center gap-1.5 pt-1">
-                  <span className="text-[11px] text-zinc-400">Presets:</span>
+                  <span className="text-xs text-zinc-500">Presets:</span>
                   {[50, 33, 67].map((val) => (
                     <button
                       key={val}
                       type="button"
                       onClick={() => setSplitPercent(val)}
-                      className={`px-2 py-0.5 rounded text-[11px] font-mono transition ${
+                      className={`px-2 py-0.5 rounded text-xs font-mono transition ${
                         splitPercent === val
-                          ? 'bg-indigo-600 text-white font-bold'
-                          : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                          ? 'bg-zinc-900 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900 font-bold'
+                          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200'
                       }`}
                     >
                       {val}%
@@ -273,18 +266,15 @@ export function SplitToolModal() {
                 </div>
               </div>
 
-              {/* Summary Cards */}
-              <div className="rounded-xl border border-white/10 p-3 space-y-2 text-xs bg-zinc-950/60">
-                <div className="flex justify-between items-center text-zinc-300">
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <span className="w-2 h-2 rounded-full bg-indigo-500" />
+              <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-3 space-y-1.5 text-xs bg-zinc-50/50 dark:bg-zinc-900/50">
+                <div className="flex justify-between items-center text-zinc-700 dark:text-zinc-300">
+                  <span className="font-medium">
                     Part 1 ({direction === 'horizontal' ? 'Top' : 'Left'}):
                   </span>
                   <span className="font-mono font-semibold">0% – {splitPercent}%</span>
                 </div>
-                <div className="flex justify-between items-center text-zinc-300">
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <span className="w-2 h-2 rounded-full bg-amber-500" />
+                <div className="flex justify-between items-center text-zinc-700 dark:text-zinc-300">
+                  <span className="font-medium">
                     Part 2 ({direction === 'horizontal' ? 'Bottom' : 'Right'}):
                   </span>
                   <span className="font-mono font-semibold">{splitPercent}% – 100%</span>
@@ -292,21 +282,20 @@ export function SplitToolModal() {
               </div>
             </div>
 
-            {/* Commit Actions */}
             <div className="space-y-2 pt-2">
               <button
                 type="button"
                 onClick={handleApplySplit}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-500/20 active:scale-98 transition"
+                className="w-full h-9 flex items-center justify-center gap-2 rounded-md text-xs font-semibold bg-zinc-900 text-zinc-50 hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 transition"
               >
-                <Scissors className="w-4 h-4" />
-                Confirm & Split Page
+                <Scissors className="w-3.5 h-3.5" />
+                <span>Confirm & Split</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveSplitPageId(null)}
-                className="w-full py-2 px-4 rounded-xl text-xs font-medium border border-white/10 hover:bg-zinc-800 text-zinc-300 transition"
+                className="w-full h-9 rounded-md text-xs font-medium border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition"
               >
                 Cancel
               </button>

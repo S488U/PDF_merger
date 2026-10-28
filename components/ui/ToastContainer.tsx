@@ -13,38 +13,38 @@ export function ToastContainer() {
     <div
       aria-live="polite"
       aria-atomic="true"
-      className="fixed bottom-24 right-4 sm:right-6 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"
+      className="fixed bottom-20 right-4 sm:right-6 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"
     >
       {toasts.map((toast) => {
         let Icon = Info;
-        let colorClasses = 'border-blue-200 dark:border-blue-800/60 bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400';
+        let iconColor = 'text-zinc-900 dark:text-zinc-100';
 
         if (toast.type === 'success') {
           Icon = CheckCircle2;
-          colorClasses = 'border-emerald-200 dark:border-emerald-800/60 bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400';
+          iconColor = 'text-emerald-600 dark:text-emerald-400';
         } else if (toast.type === 'warning') {
           Icon = AlertTriangle;
-          colorClasses = 'border-amber-200 dark:border-amber-800/60 bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400';
+          iconColor = 'text-amber-600 dark:text-amber-400';
         } else if (toast.type === 'error') {
           Icon = AlertCircle;
-          colorClasses = 'border-red-200 dark:border-red-800/60 bg-white dark:bg-slate-900 text-red-600 dark:text-red-400';
+          iconColor = 'text-red-600 dark:text-red-400';
         }
 
         return (
           <div
             key={toast.id}
             role="status"
-            className={`pointer-events-auto flex items-start gap-3 p-3.5 rounded-xl border shadow-lg transition-all animate-in fade-in slide-in-from-bottom-2 ${colorClasses}`}
+            className="pointer-events-auto flex items-start gap-3 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 shadow-lg transition-all animate-in fade-in slide-in-from-bottom-2"
           >
-            <Icon className="w-4 h-4 shrink-0 mt-0.5" />
-            <div className="flex-1 text-xs font-medium text-slate-800 dark:text-slate-200 leading-snug">
+            <Icon className={`w-4 h-4 shrink-0 mt-0.5 ${iconColor}`} />
+            <div className="flex-1 text-xs font-medium leading-relaxed">
               {toast.message}
             </div>
             <button
               type="button"
               onClick={() => removeToast(toast.id)}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded transition"
-              aria-label="Dismiss notification"
+              className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-0.5 rounded transition"
+              aria-label="Dismiss"
             >
               <X className="w-3.5 h-3.5" />
             </button>

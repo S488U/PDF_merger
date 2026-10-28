@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import { X, Command, CornerDownLeft } from 'lucide-react';
+import { X, Command } from 'lucide-react';
 
 interface ShortcutsModalProps {
   isOpen: boolean;
@@ -28,23 +28,22 @@ export function ShortcutsModal({ isOpen, onClose }: ShortcutsModalProps) {
 
   const shortcuts = [
     {
-      category: 'History & Editing',
+      category: 'Editing',
       items: [
-        { key: 'Ctrl + Z / ⌘Z', desc: 'Undo last operation' },
-        { key: 'Ctrl + Y / ⌘⇧Z', desc: 'Redo last undone operation' },
+        { key: 'Ctrl + Z', desc: 'Undo last operation' },
+        { key: 'Ctrl + Y', desc: 'Redo last undone operation' },
         { key: 'R', desc: 'Rotate page 90° clockwise' },
-        { key: 'S', desc: 'Open interactive Split tool in inspect modal' },
-        { key: 'Delete / Backspace', desc: 'Delete active or selected page(s)' },
+        { key: 'S', desc: 'Split page in preview modal' },
+        { key: 'Delete', desc: 'Delete active or selected page(s)' },
       ],
     },
     {
-      category: 'Workspace & Navigation',
+      category: 'Workspace',
       items: [
-        { key: 'Ctrl + B / ⌘B', desc: 'Toggle Studio Sidebar' },
-        { key: '← / →', desc: 'Previous / Next page in preview modal' },
-        { key: 'Esc', desc: 'Close any active modal or overlay' },
-        { key: 'Enter', desc: 'Confirm range filter or split apply' },
-        { key: '?', desc: 'Toggle keyboard shortcuts reference' },
+        { key: 'Ctrl + B', desc: 'Toggle Studio Sidebar' },
+        { key: '← / →', desc: 'Previous / Next page in preview' },
+        { key: 'Esc', desc: 'Close dialog or modal' },
+        { key: '?', desc: 'Toggle shortcuts reference' },
       ],
     },
   ];
@@ -54,49 +53,44 @@ export function ShortcutsModal({ isOpen, onClose }: ShortcutsModalProps) {
       ref={dialogRef}
       onClose={onClose}
       aria-labelledby="shortcuts-dialog-title"
-      className="p-0 rounded-2xl bg-zinc-900 border border-white/10 shadow-2xl max-w-lg w-full backdrop:bg-black/75 m-auto text-zinc-100 overflow-hidden"
+      className="p-0 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-2xl max-w-md w-full backdrop:bg-black/75 m-auto text-zinc-900 dark:text-zinc-100 overflow-hidden"
     >
       <div className="p-6">
-        <div className="flex items-center justify-between pb-4 border-b border-white/10">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center">
-              <Command className="w-4 h-4" />
+        <div className="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-md bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-900 dark:text-zinc-100">
+              <Command className="w-3.5 h-3.5" />
             </div>
-            <div>
-              <h2 id="shortcuts-dialog-title" className="text-base font-bold text-zinc-100">
-                Keyboard Shortcuts
-              </h2>
-              <p className="text-xs text-zinc-400">
-                Studio shortcuts for high-speed document editing
-              </p>
-            </div>
+            <h2 id="shortcuts-dialog-title" className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+              Keyboard Shortcuts
+            </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition"
-            aria-label="Close shortcuts modal"
+            className="h-8 w-8 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center justify-center transition"
+            aria-label="Close"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="py-5 space-y-6">
+        <div className="py-4 space-y-4">
           {shortcuts.map((group) => (
-            <div key={group.category} className="space-y-2.5">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+            <div key={group.category} className="space-y-2">
+              <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
                 {group.category}
               </h3>
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 {group.items.map((item) => (
                   <div
                     key={item.key}
-                    className="flex items-center justify-between text-xs py-2 px-3 rounded-xl bg-zinc-950/60 border border-white/5"
+                    className="flex items-center justify-between text-xs py-1.5 px-2.5 rounded-md bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-zinc-800/60"
                   >
-                    <span className="text-zinc-300 font-medium">
+                    <span className="text-zinc-700 dark:text-zinc-300 font-medium">
                       {item.desc}
                     </span>
-                    <kbd className="px-2 py-0.5 font-mono text-[11px] font-semibold bg-zinc-800 text-zinc-200 border border-white/10 rounded-md shadow-xs">
+                    <kbd className="px-2 py-0.5 font-mono text-[11px] font-semibold bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 rounded shadow-2xs">
                       {item.key}
                     </kbd>
                   </div>
@@ -106,11 +100,11 @@ export function ShortcutsModal({ isOpen, onClose }: ShortcutsModalProps) {
           ))}
         </div>
 
-        <div className="pt-4 border-t border-white/10 flex justify-end">
+        <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-white text-zinc-900 hover:bg-zinc-200 transition"
+            className="h-8 px-4 rounded-md text-xs font-semibold bg-zinc-900 text-zinc-50 dark:bg-zinc-50 dark:text-zinc-900 hover:opacity-90 transition"
           >
             Done
           </button>
