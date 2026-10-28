@@ -32,13 +32,15 @@ export function ShortcutsModal({ isOpen, onClose }: ShortcutsModalProps) {
       items: [
         { key: 'Ctrl + Z / ⌘Z', desc: 'Undo last operation' },
         { key: 'Ctrl + Y / ⌘⇧Z', desc: 'Redo last undone operation' },
-        { key: 'Delete / Backspace', desc: 'Delete focused or hovered page' },
-        { key: 'R', desc: 'Rotate selected page 90° clockwise' },
+        { key: 'R', desc: 'Rotate page 90° clockwise' },
+        { key: 'S', desc: 'Open interactive Split tool in inspect modal' },
+        { key: 'Delete / Backspace', desc: 'Delete active or selected page(s)' },
       ],
     },
     {
-      category: 'Inspection & Navigation',
+      category: 'Workspace & Navigation',
       items: [
+        { key: 'Ctrl + B / ⌘B', desc: 'Toggle Studio Sidebar' },
         { key: '← / →', desc: 'Previous / Next page in preview modal' },
         { key: 'Esc', desc: 'Close any active modal or overlay' },
         { key: 'Enter', desc: 'Confirm range filter or split apply' },
@@ -52,27 +54,27 @@ export function ShortcutsModal({ isOpen, onClose }: ShortcutsModalProps) {
       ref={dialogRef}
       onClose={onClose}
       aria-labelledby="shortcuts-dialog-title"
-      className="p-0 rounded-2xl bg-white dark:bg-slate-900 shadow-2xl max-w-lg w-full border border-slate-200 dark:border-slate-800 backdrop:bg-black/60 m-auto text-slate-900 dark:text-slate-100 overflow-hidden"
+      className="p-0 rounded-2xl bg-zinc-900 border border-white/10 shadow-2xl max-w-lg w-full backdrop:bg-black/75 m-auto text-zinc-100 overflow-hidden"
     >
       <div className="p-6">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+        <div className="flex items-center justify-between pb-4 border-b border-white/10">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center">
               <Command className="w-4 h-4" />
             </div>
             <div>
-              <h2 id="shortcuts-dialog-title" className="text-base font-bold">
+              <h2 id="shortcuts-dialog-title" className="text-base font-bold text-zinc-100">
                 Keyboard Shortcuts
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Speed up your document workflow
+              <p className="text-xs text-zinc-400">
+                Studio shortcuts for high-speed document editing
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition"
+            className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition"
             aria-label="Close shortcuts modal"
           >
             <X className="w-4 h-4" />
@@ -82,19 +84,19 @@ export function ShortcutsModal({ isOpen, onClose }: ShortcutsModalProps) {
         <div className="py-5 space-y-6">
           {shortcuts.map((group) => (
             <div key={group.category} className="space-y-2.5">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500">
                 {group.category}
               </h3>
               <div className="space-y-1.5">
                 {group.items.map((item) => (
                   <div
                     key={item.key}
-                    className="flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60"
+                    className="flex items-center justify-between text-xs py-2 px-3 rounded-xl bg-zinc-950/60 border border-white/5"
                   >
-                    <span className="text-slate-700 dark:text-slate-300 font-medium">
+                    <span className="text-zinc-300 font-medium">
                       {item.desc}
                     </span>
-                    <kbd className="px-2 py-0.5 font-mono text-[11px] font-semibold bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded shadow-2xs">
+                    <kbd className="px-2 py-0.5 font-mono text-[11px] font-semibold bg-zinc-800 text-zinc-200 border border-white/10 rounded-md shadow-xs">
                       {item.key}
                     </kbd>
                   </div>
@@ -104,13 +106,13 @@ export function ShortcutsModal({ isOpen, onClose }: ShortcutsModalProps) {
           ))}
         </div>
 
-        <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+        <div className="pt-4 border-t border-white/10 flex justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 hover:opacity-90 transition"
+            className="px-4 py-2 rounded-xl text-xs font-bold bg-white text-zinc-900 hover:bg-zinc-200 transition"
           >
-            Got it
+            Done
           </button>
         </div>
       </div>

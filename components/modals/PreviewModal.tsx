@@ -16,6 +16,7 @@ import {
   ZoomOut,
   Maximize2,
   Loader2,
+  Scissors,
 } from 'lucide-react';
 
 export function PreviewModal() {
@@ -23,6 +24,7 @@ export function PreviewModal() {
   const {
     activePreviewPageId,
     setActivePreviewPageId,
+    setActiveSplitPageId,
     pages,
     getFileBuffer,
     rotatePage,
@@ -91,6 +93,13 @@ export function PreviewModal() {
     }
   }, [activeIndex, pages, setActivePreviewPageId]);
 
+  const handleSplit = useCallback(() => {
+    if (!activePage) return;
+    const pageId = activePage.id;
+    setActivePreviewPageId(null);
+    setActiveSplitPageId(pageId);
+  }, [activePage, setActivePreviewPageId, setActiveSplitPageId]);
+
   // Keyboard navigation inside modal
   useEffect(() => {
     if (!activePreviewPageId || !activePage) return;
@@ -108,6 +117,9 @@ export function PreviewModal() {
       } else if (e.key === 'r' || e.key === 'R') {
         e.preventDefault();
         rotatePage(activePage.id, 90);
+      } else if (e.key === 's' || e.key === 'S') {
+        e.preventDefault();
+        handleSplit();
       } else if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault();
         const nextId =
@@ -123,7 +135,7 @@ export function PreviewModal() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activePreviewPageId, activePage, activeIndex, pages, handlePrev, handleNext, rotatePage, deletePage, setActivePreviewPageId]);
+  }, [activePreviewPageId, activePage, activeIndex, pages, handlePrev, handleNext, rotatePage, handleSplit, deletePage, setActivePreviewPageId]);
 
   const handleDownload = async () => {
     if (!activePage) return;
@@ -152,17 +164,17 @@ export function PreviewModal() {
       ref={dialogRef}
       onClose={handleClose}
       aria-labelledby="preview-dialog-title"
-      className="p-0 rounded-2xl bg-white dark:bg-slate-900 shadow-2xl max-w-5xl w-[95vw] border border-slate-200 dark:border-slate-800 backdrop:bg-black/75 m-auto text-slate-900 dark:text-slate-100 overflow-hidden"
+      className="p-0 rounded-2xl bg-zinc-900 border border-white/10 shadow-2xl max-w-5xl w-[95vw] backdrop:bg-black/80 m-auto text-zinc-100 overflow-hidden"
     >
       <div className="flex flex-col h-[90vh]">
         {/* Top Control Bar */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-white/10 bg-zinc-950/80 backdrop-blur-md shrink-0">
           <div className="flex items-center gap-3">
             <div>
-              <h3 id="preview-dialog-title" className="text-xs sm:text-sm font-bold truncate max-w-[200px] sm:max-w-md">
+              <h3 id="preview-dialog-title" className="text-xs sm:text-sm font-bold truncate max-w-[200px] sm:max-w-md text-zinc-100">
                 {activePage.fileName}
               </h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              <p className="text-[11px] text-zinc-400">
                 Page {activePage.displayPageNumber} of source • Sequence #{activeIndex + 1} of {pages.length}
                 {activePage.sectionLabel && ` • ${activePage.sectionLabel}`}
               </p>
@@ -172,24 +184,24 @@ export function PreviewModal() {
           {/* Action buttons */}
           <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Zoom Controls */}
-            <div className="hidden sm:flex items-center gap-1 bg-slate-200/60 dark:bg-slate-800/60 p-1 rounded-xl">
+            <div className="hidden sm:flex items-center gap-1 bg-zinc-800/80 p-1 rounded-xl border border-white/5">
               <button
                 type="button"
                 onClick={zoomOut}
                 disabled={zoomScale <= 0.5}
-                className="p-1 rounded-lg hover:bg-white dark:hover:bg-slate-700 disabled:opacity-30 text-slate-600 dark:text-slate-300 transition"
+                className="p-1 rounded-lg hover:bg-zinc-700 disabled:opacity-30 text-zinc-400 hover:text-zinc-200 transition"
                 title="Zoom out"
               >
                 <ZoomOut className="w-3.5 h-3.5" />
               </button>
-              <span className="text-[10px] font-mono font-semibold px-1 text-slate-600 dark:text-slate-300 min-w-[34px] text-center">
+              <span className="text-[10px] font-mono font-semibold px-1 text-zinc-300 min-w-[34px] text-center">
                 {Math.round(zoomScale * 100)}%
               </span>
               <button
                 type="button"
                 onClick={zoomIn}
                 disabled={zoomScale >= 2.5}
-                className="p-1 rounded-lg hover:bg-white dark:hover:bg-slate-700 disabled:opacity-30 text-slate-600 dark:text-slate-300 transition"
+                className="p-1 rounded-lg hover:bg-zinc-700 disabled:opacity-30 text-zinc-400 hover:text-zinc-200 transition"
                 title="Zoom in"
               >
                 <ZoomIn className="w-3.5 h-3.5" />
@@ -197,18 +209,29 @@ export function PreviewModal() {
               <button
                 type="button"
                 onClick={zoomReset}
-                className="p-1 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition"
+                className="p-1 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition"
                 title="Reset zoom"
               >
                 <Maximize2 className="w-3.5 h-3.5" />
               </button>
             </div>
 
+            {/* Split Page Button */}
+            <button
+              type="button"
+              onClick={handleSplit}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition shadow-xs"
+              title="Split this page into 2 sections (S)"
+            >
+              <Scissors className="w-3.5 h-3.5" />
+              <span>Split Page</span>
+            </button>
+
             {/* Rotate */}
             <button
               type="button"
               onClick={() => rotatePage(activePage.id, 90)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-white/10 bg-zinc-800/60 hover:bg-zinc-800 text-zinc-200 transition"
               title="Rotate 90° clockwise (R)"
             >
               <RotateCw className="w-3.5 h-3.5" />
@@ -219,7 +242,7 @@ export function PreviewModal() {
             <button
               type="button"
               onClick={handleDownload}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 shadow-2xs transition"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-xs shadow-indigo-500/20 transition"
               title="Download this page"
             >
               <Download className="w-3.5 h-3.5" />
@@ -239,7 +262,7 @@ export function PreviewModal() {
                 deletePage(activePage.id);
                 setActivePreviewPageId(nextId);
               }}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
+              className="p-1.5 rounded-xl text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition"
               title="Delete this page"
             >
               <Trash2 className="w-4 h-4" />
@@ -249,7 +272,7 @@ export function PreviewModal() {
             <button
               type="button"
               onClick={handleClose}
-              className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition"
+              className="p-1.5 rounded-xl hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition"
               aria-label="Close preview"
             >
               <X className="w-5 h-5" />
@@ -258,13 +281,13 @@ export function PreviewModal() {
         </div>
 
         {/* Viewport Canvas Area with Prev / Next Navigation Arrows */}
-        <div className="relative flex-1 overflow-auto p-4 sm:p-6 flex items-center justify-center bg-slate-100/70 dark:bg-slate-950 min-h-0">
+        <div className="relative flex-1 overflow-auto p-4 sm:p-6 flex items-center justify-center bg-zinc-950 min-h-0">
           {/* Previous Arrow */}
           <button
             type="button"
             onClick={handlePrev}
             disabled={activeIndex === 0}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/90 dark:bg-slate-800/90 shadow-md border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-105 disabled:opacity-20 disabled:hover:scale-100 transition"
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-zinc-900/90 shadow-xl border border-white/10 flex items-center justify-center text-zinc-200 hover:scale-105 disabled:opacity-20 disabled:hover:scale-100 transition"
             aria-label="Previous page"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -272,8 +295,8 @@ export function PreviewModal() {
 
           {/* Rendered Page */}
           {isLoading ? (
-            <div className="flex flex-col items-center gap-3 text-slate-400">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+            <div className="flex flex-col items-center gap-3 text-zinc-400">
+              <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
               <span className="text-xs font-medium">Generating high-definition view...</span>
             </div>
           ) : previewSrc ? (
@@ -297,7 +320,7 @@ export function PreviewModal() {
             type="button"
             onClick={handleNext}
             disabled={activeIndex === pages.length - 1}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/90 dark:bg-slate-800/90 shadow-md border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-105 disabled:opacity-20 disabled:hover:scale-100 transition"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-zinc-900/90 shadow-xl border border-white/10 flex items-center justify-center text-zinc-200 hover:scale-105 disabled:opacity-20 disabled:hover:scale-100 transition"
             aria-label="Next page"
           >
             <ChevronRight className="w-5 h-5" />
@@ -305,9 +328,9 @@ export function PreviewModal() {
         </div>
 
         {/* Footer info pill */}
-        <div className="px-4 py-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/70 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 shrink-0">
-          <span>Shortcuts: <strong>←</strong> / <strong>→</strong> navigate • <strong>R</strong> rotate • <strong>Del</strong> delete</span>
-          <span className="font-mono text-[11px]">
+        <div className="px-4 py-2 border-t border-white/10 bg-zinc-950 flex items-center justify-between text-xs text-zinc-400 shrink-0">
+          <span>Shortcuts: <strong>←</strong> / <strong>→</strong> navigate • <strong>R</strong> rotate • <strong>S</strong> split • <strong>Del</strong> delete</span>
+          <span className="font-mono text-[11px] text-zinc-300">
             {activeIndex + 1} / {pages.length}
           </span>
         </div>
