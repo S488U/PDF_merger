@@ -78,8 +78,7 @@ export function DropZone() {
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
-        onClick={triggerBrowse}
-        className={`group relative w-full flex items-center justify-between px-5 py-3.5 rounded-lg border transition-all cursor-pointer ${
+        className={`group relative w-full flex items-center justify-between px-5 py-3.5 rounded-lg border transition-all cursor-pointer overflow-hidden ${
           isDragOver
             ? 'border-zinc-900 bg-zinc-100 dark:border-zinc-100 dark:bg-zinc-900'
             : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 hover:border-zinc-400 dark:hover:border-zinc-700 shadow-2xs'
@@ -90,14 +89,14 @@ export function DropZone() {
           type="file"
           multiple
           accept="application/pdf,.pdf"
-          className="hidden"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
           onChange={async (e) => {
             await handleFiles(e.target.files);
             if (fileInputRef.current) fileInputRef.current.value = '';
           }}
         />
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 pointer-events-none">
           <div className="h-8 w-8 rounded-md bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-900 dark:text-zinc-100 shrink-0 border border-zinc-200 dark:border-zinc-700">
             {isProcessing ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -117,11 +116,8 @@ export function DropZone() {
 
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            triggerBrowse();
-          }}
-          className="h-8 px-3 rounded-md text-xs font-semibold bg-zinc-900 text-zinc-50 hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 transition shadow-2xs flex items-center gap-1.5"
+          tabIndex={-1}
+          className="pointer-events-none h-8 px-3 rounded-md text-xs font-semibold bg-zinc-900 text-zinc-50 dark:bg-zinc-50 dark:text-zinc-900 transition shadow-2xs flex items-center gap-1.5"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Upload</span>
@@ -137,8 +133,7 @@ export function DropZone() {
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
-        onClick={triggerBrowse}
-        className={`relative w-full rounded-xl border-2 border-dashed p-10 sm:p-16 transition-all duration-200 cursor-pointer text-center flex flex-col items-center justify-center gap-6 ${
+        className={`relative w-full rounded-xl border-2 border-dashed p-10 sm:p-16 transition-all duration-200 cursor-pointer text-center flex flex-col items-center justify-center gap-6 overflow-hidden ${
           isDragOver
             ? 'border-zinc-900 bg-zinc-100 dark:border-zinc-100 dark:bg-zinc-900'
             : 'border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:border-zinc-400 dark:hover:border-zinc-700'
@@ -149,14 +144,14 @@ export function DropZone() {
           type="file"
           multiple
           accept="application/pdf,.pdf"
-          className="hidden"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
           onChange={async (e) => {
             await handleFiles(e.target.files);
             if (fileInputRef.current) fileInputRef.current.value = '';
           }}
         />
 
-        <div className="h-14 w-14 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-900 dark:text-zinc-100">
+        <div className="h-14 w-14 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-900 dark:text-zinc-100 pointer-events-none">
           {isProcessing ? (
             <Loader2 className="w-6 h-6 animate-spin" />
           ) : (
@@ -164,7 +159,7 @@ export function DropZone() {
           )}
         </div>
 
-        <div className="max-w-md space-y-2">
+        <div className="max-w-md space-y-2 pointer-events-none">
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
             {isProcessing ? processingMessage || 'Reading PDF files...' : 'Select or drop PDF documents'}
           </h2>
@@ -175,17 +170,14 @@ export function DropZone() {
 
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            triggerBrowse();
-          }}
-          className="h-10 px-6 rounded-md text-sm font-semibold bg-zinc-900 text-zinc-50 hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 transition shadow-xs flex items-center gap-2"
+          tabIndex={-1}
+          className="pointer-events-none h-10 px-6 rounded-md text-sm font-semibold bg-zinc-900 text-zinc-50 dark:bg-zinc-50 dark:text-zinc-900 transition shadow-xs flex items-center gap-2"
         >
           <FilePlus2 className="w-4 h-4" />
           <span>Browse Files</span>
         </button>
 
-        <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-xs text-zinc-500 font-medium">
+        <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-xs text-zinc-500 font-medium pointer-events-none">
           <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
             <ShieldCheck className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300" /> Private & local
           </span>

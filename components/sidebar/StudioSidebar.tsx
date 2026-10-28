@@ -163,110 +163,112 @@ export function StudioSidebar({
   if (!isOpen) return null;
 
   return (
-    <aside className="w-80 sm:w-88 shrink-0 flex flex-col bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 h-[calc(100vh-3.5rem)] sticky top-14 z-20 transition-all">
-      {/* Sidebar Header with Tabs */}
-      <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-2 bg-zinc-50/50 dark:bg-zinc-900/50">
-        <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-md text-xs font-medium w-full">
-          <button
-            type="button"
-            onClick={() => setStudioTab('files')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded transition ${
-              currentTab === 'files'
-                ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-2xs font-semibold'
-                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
-            }`}
-          >
-            <Files className="w-3.5 h-3.5" />
-            <span>Files</span>
-            {sourceFiles.length > 0 && (
-              <span className="font-mono text-[11px] opacity-75">({sourceFiles.length})</span>
-            )}
-          </button>
+    <>
+      {/* Mobile Drawer Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/50 backdrop-blur-xs z-40 md:hidden animate-fade-in"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      <aside className="fixed inset-y-0 left-0 z-50 w-72 sm:w-80 md:relative md:inset-auto md:z-20 md:w-80 sm:md:w-88 shrink-0 flex flex-col bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 h-full top-0 shadow-xl md:shadow-none transition-all">
+        {/* Sidebar Header with Tabs */}
+        <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-2 bg-zinc-50/50 dark:bg-zinc-900/50">
+          <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-md text-xs font-medium w-full">
+            <button
+              type="button"
+              onClick={() => setStudioTab('files')}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded transition ${
+                currentTab === 'files'
+                  ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-2xs font-semibold'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+              }`}
+            >
+              <Files className="w-3.5 h-3.5" />
+              <span>Files</span>
+              {sourceFiles.length > 0 && (
+                <span className="font-mono text-[11px] opacity-75">({sourceFiles.length})</span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStudioTab('filter')}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded transition ${
+                currentTab === 'filter'
+                  ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-2xs font-semibold'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+              }`}
+            >
+              <Filter className="w-3.5 h-3.5" />
+              <span>Filter</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStudioTab('settings')}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded transition ${
+                currentTab === 'settings'
+                  ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-2xs font-semibold'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5" />
+              <span>Settings</span>
+            </button>
+          </div>
 
           <button
             type="button"
-            onClick={() => setStudioTab('filter')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded transition ${
-              currentTab === 'filter'
-                ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-2xs font-semibold'
-                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
-            }`}
+            onClick={onClose}
+            className="h-8 w-8 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center transition shrink-0"
+            title="Close sidebar"
+            aria-label="Close sidebar"
           >
-            <Filter className="w-3.5 h-3.5" />
-            <span>Filter</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setStudioTab('settings')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded transition ${
-              currentTab === 'settings'
-                ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-2xs font-semibold'
-                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
-            }`}
-          >
-            <Sliders className="w-3.5 h-3.5" />
-            <span>Settings</span>
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="h-8 w-8 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center transition shrink-0"
-          title="Close sidebar"
-          aria-label="Close sidebar"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
+        {/* Tab Panels */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          {/* TAB 1: FILES */}
+          {currentTab === 'files' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                    Documents
+                  </h3>
+                  <p className="text-xs text-zinc-500">
+                    {pages.length} total pages on canvas
+                  </p>
+                </div>
 
-      {/* Tab Panels */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {/* TAB 1: FILES */}
-        {currentTab === 'files' && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                  Documents
-                </h3>
-                <p className="text-xs text-zinc-500">
-                  {pages.length} total pages on canvas
-                </p>
+                {(sourceFiles.length > 0 || pages.length > 0) && (
+                  <button
+                    type="button"
+                    onClick={() => clearAll()}
+                    className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:underline font-medium transition"
+                  >
+                    Clear all
+                  </button>
+                )}
               </div>
 
-              {(sourceFiles.length > 0 || pages.length > 0) && (
-                <button
-                  type="button"
-                  onClick={() => clearAll()}
-                  className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:underline font-medium transition"
-                >
-                  Clear all
-                </button>
-              )}
-            </div>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept="application/pdf,.pdf"
-              className="hidden"
-              onChange={async (e) => {
-                await handleFiles(e.target.files);
-                if (fileInputRef.current) fileInputRef.current.value = '';
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isProcessing}
-              className="w-full h-9 flex items-center justify-center gap-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 text-xs font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Documents</span>
-            </button>
+              <label className="relative w-full h-9 flex items-center justify-center gap-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 text-xs font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition cursor-pointer select-none">
+                <input
+                  type="file"
+                  multiple
+                  accept="application/pdf,.pdf"
+                  className="sr-only"
+                  onChange={async (e) => {
+                    await handleFiles(e.target.files);
+                    e.target.value = '';
+                  }}
+                />
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Documents</span>
+              </label>
 
             {sourceFiles.length === 0 ? (
               <div className="text-center py-10 px-4 rounded-lg border border-dashed border-zinc-200 dark:border-zinc-800 space-y-2">
@@ -541,5 +543,6 @@ export function StudioSidebar({
         )}
       </div>
     </aside>
+    </>
   );
 }

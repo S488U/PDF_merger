@@ -67,11 +67,11 @@ export function SplitToolModal() {
 
     if (direction === 'horizontal') {
       const relativeY = e.clientY - rect.top;
-      const percent = Math.max(10, Math.min(90, (relativeY / rect.height) * 100));
+      const percent = Math.max(5, Math.min(95, (relativeY / rect.height) * 100));
       setSplitPercent(Math.round(percent));
     } else {
       const relativeX = e.clientX - rect.left;
-      const percent = Math.max(10, Math.min(90, (relativeX / rect.width) * 100));
+      const percent = Math.max(5, Math.min(95, (relativeX / rect.width) * 100));
       setSplitPercent(Math.round(percent));
     }
   };
@@ -240,8 +240,8 @@ export function SplitToolModal() {
 
                 <input
                   type="range"
-                  min="10"
-                  max="90"
+                  min="5"
+                  max="95"
                   value={splitPercent}
                   onChange={(e) => setSplitPercent(parseInt(e.target.value, 10))}
                   className="w-full accent-zinc-900 dark:accent-zinc-100 cursor-pointer"
@@ -249,7 +249,7 @@ export function SplitToolModal() {
 
                 <div className="flex items-center gap-1.5 pt-1">
                   <span className="text-xs text-zinc-500">Presets:</span>
-                  {[50, 33, 67].map((val) => (
+                  {[25, 50, 75].map((val) => (
                     <button
                       key={val}
                       type="button"

@@ -48,6 +48,7 @@ export interface AppSettings {
 
 export interface UndoSnapshot {
   pages: PageItem[];
+  allPages?: PageItem[];
   sourceFiles: SourceFile[];
   description: string;
 }

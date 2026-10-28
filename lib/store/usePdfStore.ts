@@ -23,6 +23,7 @@ function generateColor(index: number): string {
 interface PdfState {
   sourceFiles: SourceFile[];
   pages: PageItem[];
+  allPages: PageItem[];
   outputName: string;
   settings: AppSettings;
   undoStack: UndoSnapshot[];
@@ -75,6 +76,7 @@ const fileBufferMap = new Map<string, ArrayBuffer>();
 export const usePdfStore = create<PdfState>((set, get) => ({
   sourceFiles: [],
   pages: [],
+  allPages: [],
   outputName: 'merged-document.pdf',
   settings: DEFAULT_SETTINGS,
   undoStack: [],
@@ -116,13 +118,14 @@ export const usePdfStore = create<PdfState>((set, get) => ({
 
   addSourceFiles: async (uploadedFiles) => {
     set({ isProcessing: true, processingMessage: `Processing ${uploadedFiles.length} file(s)...` });
-    const { sourceFiles, pages, undoStack } = get();
+    const { sourceFiles, pages, allPages, undoStack } = get();
 
     // Snapshot for undo
     const newUndoStack = [
       ...undoStack.slice(-14),
       {
         pages: [...pages],
+        allPages: [...allPages],
         sourceFiles: [...sourceFiles],
         description: `Import ${uploadedFiles.length} file(s)`,
       },
@@ -130,6 +133,7 @@ export const usePdfStore = create<PdfState>((set, get) => ({
 
     const newSourceFiles: SourceFile[] = [...sourceFiles];
     const newPages: PageItem[] = [...pages];
+    const newAllPages: PageItem[] = [...allPages];
     let newlyAddedPageCount = 0;
 
     for (let i = 0; i < uploadedFiles.length; i++) {
@@ -159,20 +163,23 @@ export const usePdfStore = create<PdfState>((set, get) => ({
 
       for (let pIndex = 0; pIndex < pageCount; pIndex++) {
         const pageId = `${fileId}_p${pIndex}_${Math.random().toString(36).substring(2, 7)}`;
-        newPages.push({
+        const pageItem: PageItem = {
           id: pageId,
           fileId,
           fileName: file.name,
           pageIndex: pIndex,
           displayPageNumber: pIndex + 1,
           rotation: 0,
-        });
+        };
+        newPages.push(pageItem);
+        newAllPages.push(pageItem);
       }
     }
 
     set({
       sourceFiles: newSourceFiles,
       pages: newPages,
+      allPages: newAllPages,
       undoStack: newUndoStack,
       redoStack: [],
       isProcessing: false,
@@ -190,6 +197,7 @@ export const usePdfStore = create<PdfState>((set, get) => ({
             .then((thumbnailUrl) => {
               set((state) => ({
                 pages: state.pages.map((p) => (p.id === page.id ? { ...p, thumbnailUrl } : p)),
+                allPages: state.allPages.map((p) => (p.id === page.id ? { ...p, thumbnailUrl } : p)),
               }));
             })
             .catch((err) => console.error('Thumbnail error:', err));
@@ -199,19 +207,20 @@ export const usePdfStore = create<PdfState>((set, get) => ({
   },
 
   removeSourceFile: (fileId: string) => {
-    const { sourceFiles, pages, undoStack } = get();
+    const { sourceFiles, pages, allPages, undoStack } = get();
     const file = sourceFiles.find((f) => f.id === fileId);
     fileBufferMap.delete(fileId);
 
     set({
       sourceFiles: sourceFiles.filter((f) => f.id !== fileId),
       pages: pages.filter((p) => p.fileId !== fileId),
+      allPages: allPages.filter((p) => p.fileId !== fileId),
       selectedPageIds: get().selectedPageIds.filter(
         (id) => !pages.find((p) => p.id === id && p.fileId === fileId)
       ),
       undoStack: [
         ...undoStack.slice(-14),
-        { pages: [...pages], sourceFiles: [...sourceFiles], description: `Remove file ${file?.name || ''}` },
+        { pages: [...pages], allPages: [...allPages], sourceFiles: [...sourceFiles], description: `Remove file ${file?.name || ''}` },
       ],
       redoStack: [],
     });
@@ -220,36 +229,50 @@ export const usePdfStore = create<PdfState>((set, get) => ({
   },
 
   reorderPages: (activeId: string, overId: string) => {
-    const { pages, sourceFiles, undoStack } = get();
+    const { pages, allPages, sourceFiles, undoStack } = get();
     const oldIndex = pages.findIndex((p) => p.id === activeId);
     const newIndex = pages.findIndex((p) => p.id === overId);
     if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
 
+    const reorderedPages = arrayMove(pages, oldIndex, newIndex);
+
+    const allOldIndex = allPages.findIndex((p) => p.id === activeId);
+    const allNewIndex = allPages.findIndex((p) => p.id === overId);
+    let reorderedAll = allPages;
+    if (allOldIndex !== -1 && allNewIndex !== -1) {
+      reorderedAll = arrayMove(allPages, allOldIndex, allNewIndex);
+    }
+
     set({
-      pages: arrayMove(pages, oldIndex, newIndex),
+      pages: reorderedPages,
+      allPages: reorderedAll,
       undoStack: [
         ...undoStack.slice(-14),
-        { pages: [...pages], sourceFiles: [...sourceFiles], description: 'Reorder pages' },
+        { pages: [...pages], allPages: [...allPages], sourceFiles: [...sourceFiles], description: 'Reorder pages' },
       ],
       redoStack: [],
     });
   },
 
   rotatePage: async (pageId: string, delta = 90) => {
-    const { pages, sourceFiles, undoStack } = get();
-    const targetPage = pages.find((p) => p.id === pageId);
+    const { pages, allPages, sourceFiles, undoStack } = get();
+    const targetPage = allPages.find((p) => p.id === pageId) || pages.find((p) => p.id === pageId);
     if (!targetPage) return;
 
     const newRotation = (targetPage.rotation + delta) % 360;
     const updatedPages = pages.map((p) =>
       p.id === pageId ? { ...p, rotation: newRotation, thumbnailUrl: undefined } : p
     );
+    const updatedAllPages = allPages.map((p) =>
+      p.id === pageId ? { ...p, rotation: newRotation, thumbnailUrl: undefined } : p
+    );
 
     set({
       pages: updatedPages,
+      allPages: updatedAllPages,
       undoStack: [
         ...undoStack.slice(-14),
-        { pages: [...pages], sourceFiles: [...sourceFiles], description: `Rotate page ${targetPage.displayPageNumber}` },
+        { pages: [...pages], allPages: [...allPages], sourceFiles: [...sourceFiles], description: `Rotate page ${targetPage.displayPageNumber}` },
       ],
       redoStack: [],
     });
@@ -259,24 +282,29 @@ export const usePdfStore = create<PdfState>((set, get) => ({
       const thumbnailUrl = await renderPageThumbnail(buffer, targetPage.pageIndex, newRotation, targetPage.crop);
       set((state) => ({
         pages: state.pages.map((p) => (p.id === pageId ? { ...p, thumbnailUrl } : p)),
+        allPages: state.allPages.map((p) => (p.id === pageId ? { ...p, thumbnailUrl } : p)),
       }));
     }
   },
 
   rotateSelectedPages: async (delta = 90) => {
-    const { pages, sourceFiles, undoStack, selectedPageIds } = get();
+    const { pages, allPages, sourceFiles, undoStack, selectedPageIds } = get();
     if (selectedPageIds.length === 0) return;
 
     const selectedSet = new Set(selectedPageIds);
     const updatedPages = pages.map((p) =>
       selectedSet.has(p.id) ? { ...p, rotation: (p.rotation + delta) % 360, thumbnailUrl: undefined } : p
     );
+    const updatedAllPages = allPages.map((p) =>
+      selectedSet.has(p.id) ? { ...p, rotation: (p.rotation + delta) % 360, thumbnailUrl: undefined } : p
+    );
 
     set({
       pages: updatedPages,
+      allPages: updatedAllPages,
       undoStack: [
         ...undoStack.slice(-14),
-        { pages: [...pages], sourceFiles: [...sourceFiles], description: `Rotate ${selectedPageIds.length} pages` },
+        { pages: [...pages], allPages: [...allPages], sourceFiles: [...sourceFiles], description: `Rotate ${selectedPageIds.length} pages` },
       ],
       redoStack: [],
     });
@@ -291,6 +319,7 @@ export const usePdfStore = create<PdfState>((set, get) => ({
           renderPageThumbnail(buffer, page.pageIndex, page.rotation, page.crop).then((thumbnailUrl) => {
             set((state) => ({
               pages: state.pages.map((p) => (p.id === pageId ? { ...p, thumbnailUrl } : p)),
+              allPages: state.allPages.map((p) => (p.id === pageId ? { ...p, thumbnailUrl } : p)),
             }));
           });
         }
@@ -299,14 +328,15 @@ export const usePdfStore = create<PdfState>((set, get) => ({
   },
 
   deletePage: (pageId: string) => {
-    const { pages, sourceFiles, undoStack, selectedPageIds } = get();
-    const target = pages.find((p) => p.id === pageId);
+    const { pages, allPages, sourceFiles, undoStack, selectedPageIds } = get();
+    const target = allPages.find((p) => p.id === pageId) || pages.find((p) => p.id === pageId);
     set({
       pages: pages.filter((p) => p.id !== pageId),
+      allPages: allPages.filter((p) => p.id !== pageId),
       selectedPageIds: selectedPageIds.filter((id) => id !== pageId),
       undoStack: [
         ...undoStack.slice(-14),
-        { pages: [...pages], sourceFiles: [...sourceFiles], description: `Delete page ${target?.displayPageNumber || ''}` },
+        { pages: [...pages], allPages: [...allPages], sourceFiles: [...sourceFiles], description: `Delete page ${target?.displayPageNumber || ''}` },
       ],
       redoStack: [],
     });
@@ -314,16 +344,17 @@ export const usePdfStore = create<PdfState>((set, get) => ({
   },
 
   deleteSelectedPages: () => {
-    const { pages, sourceFiles, undoStack, selectedPageIds } = get();
+    const { pages, allPages, sourceFiles, undoStack, selectedPageIds } = get();
     if (selectedPageIds.length === 0) return;
 
     const selectedSet = new Set(selectedPageIds);
     set({
       pages: pages.filter((p) => !selectedSet.has(p.id)),
+      allPages: allPages.filter((p) => !selectedSet.has(p.id)),
       selectedPageIds: [],
       undoStack: [
         ...undoStack.slice(-14),
-        { pages: [...pages], sourceFiles: [...sourceFiles], description: `Delete ${selectedPageIds.length} pages` },
+        { pages: [...pages], allPages: [...allPages], sourceFiles: [...sourceFiles], description: `Delete ${selectedPageIds.length} pages` },
       ],
       redoStack: [],
     });
@@ -331,12 +362,12 @@ export const usePdfStore = create<PdfState>((set, get) => ({
   },
 
   splitPage: async (pageId: string, splitPositionRatio: number, direction: 'horizontal' | 'vertical' = 'horizontal') => {
-    const { pages, sourceFiles, undoStack } = get();
+    const { pages, allPages, sourceFiles, undoStack } = get();
     const index = pages.findIndex((p) => p.id === pageId);
-    if (index === -1) return;
+    const target = pages[index] || allPages.find((p) => p.id === pageId);
+    if (!target) return;
 
-    const target = pages[index];
-    const splitRatio = Math.max(0.1, Math.min(0.9, splitPositionRatio));
+    const splitRatio = Math.max(0.05, Math.min(0.95, splitPositionRatio));
 
     let part1: PageItem;
     let part2: PageItem;
@@ -374,14 +405,27 @@ export const usePdfStore = create<PdfState>((set, get) => ({
     }
 
     const newPages = [...pages];
-    newPages.splice(index, 1, part1, part2);
+    if (index !== -1) {
+      newPages.splice(index, 1, part1, part2);
+    } else {
+      newPages.push(part1, part2);
+    }
+
+    const allIndex = allPages.findIndex((p) => p.id === pageId);
+    const newAllPages = [...allPages];
+    if (allIndex !== -1) {
+      newAllPages.splice(allIndex, 1, part1, part2);
+    } else {
+      newAllPages.push(part1, part2);
+    }
 
     set({
       pages: newPages,
+      allPages: newAllPages,
       activeSplitPageId: null,
       undoStack: [
         ...undoStack.slice(-14),
-        { pages: [...pages], sourceFiles: [...sourceFiles], description: `Split page ${target.displayPageNumber}` },
+        { pages: [...pages], allPages: [...allPages], sourceFiles: [...sourceFiles], description: `Split page ${target.displayPageNumber}` },
       ],
       redoStack: [],
     });
@@ -400,20 +444,37 @@ export const usePdfStore = create<PdfState>((set, get) => ({
           if (p.id === part2.id) return { ...p, thumbnailUrl: thumb2 };
           return p;
         }),
+        allPages: state.allPages.map((p) => {
+          if (p.id === part1.id) return { ...p, thumbnailUrl: thumb1 };
+          if (p.id === part2.id) return { ...p, thumbnailUrl: thumb2 };
+          return p;
+        }),
       }));
     }
   },
 
   filterPages: (filterType: 'all' | 'odd' | 'even' | 'range', rangeStr?: string) => {
-    const { pages, sourceFiles, undoStack } = get();
+    const { pages, allPages, sourceFiles, undoStack } = get();
+
+    if (filterType === 'all') {
+      set({
+        pages: [...allPages],
+        undoStack: [
+          ...undoStack.slice(-14),
+          { pages: [...pages], allPages: [...allPages], sourceFiles: [...sourceFiles], description: 'Show all pages' },
+        ],
+        redoStack: [],
+      });
+      get().addToast(`Showing all ${allPages.length} pages`, 'info');
+      return;
+    }
+
     let filtered: PageItem[] = [];
 
-    if (filterType === 'all') return;
-
     if (filterType === 'odd') {
-      filtered = pages.filter((p) => p.displayPageNumber % 2 !== 0);
+      filtered = allPages.filter((p) => p.displayPageNumber % 2 !== 0);
     } else if (filterType === 'even') {
-      filtered = pages.filter((p) => p.displayPageNumber % 2 === 0);
+      filtered = allPages.filter((p) => p.displayPageNumber % 2 === 0);
     } else if (filterType === 'range' && rangeStr) {
       const validNumbers = new Set<number>();
       const parts = rangeStr.split(',');
@@ -433,20 +494,19 @@ export const usePdfStore = create<PdfState>((set, get) => ({
           if (!isNaN(num)) validNumbers.add(num);
         }
       }
-      filtered = pages.filter((p) => validNumbers.has(p.displayPageNumber));
+      filtered = allPages.filter((p) => validNumbers.has(p.displayPageNumber));
     }
 
     if (filtered.length > 0) {
-      const diff = pages.length - filtered.length;
       set({
         pages: filtered,
         undoStack: [
           ...undoStack.slice(-14),
-          { pages: [...pages], sourceFiles: [...sourceFiles], description: `Filter pages (${filterType})` },
+          { pages: [...pages], allPages: [...allPages], sourceFiles: [...sourceFiles], description: `Filter pages (${filterType})` },
         ],
         redoStack: [],
       });
-      get().addToast(`Filtered: kept ${filtered.length} pages (${diff} removed)`, 'info');
+      get().addToast(`Filtered: displaying ${filtered.length} of ${allPages.length} pages`, 'info');
     } else {
       get().addToast('No pages matched filter criteria', 'warning');
     }
@@ -479,17 +539,18 @@ export const usePdfStore = create<PdfState>((set, get) => ({
   },
 
   undo: () => {
-    const { undoStack, redoStack, pages, sourceFiles } = get();
+    const { undoStack, redoStack, pages, allPages, sourceFiles } = get();
     if (undoStack.length === 0) return;
     const lastSnapshot = undoStack[undoStack.length - 1];
 
     set({
       pages: lastSnapshot.pages,
+      allPages: lastSnapshot.allPages || lastSnapshot.pages,
       sourceFiles: lastSnapshot.sourceFiles,
       undoStack: undoStack.slice(0, -1),
       redoStack: [
         ...redoStack.slice(-14),
-        { pages: [...pages], sourceFiles: [...sourceFiles], description: lastSnapshot.description },
+        { pages: [...pages], allPages: [...allPages], sourceFiles: [...sourceFiles], description: lastSnapshot.description },
       ],
     });
 
@@ -497,17 +558,18 @@ export const usePdfStore = create<PdfState>((set, get) => ({
   },
 
   redo: () => {
-    const { redoStack, undoStack, pages, sourceFiles } = get();
+    const { redoStack, undoStack, pages, allPages, sourceFiles } = get();
     if (redoStack.length === 0) return;
     const nextSnapshot = redoStack[redoStack.length - 1];
 
     set({
       pages: nextSnapshot.pages,
+      allPages: nextSnapshot.allPages || nextSnapshot.pages,
       sourceFiles: nextSnapshot.sourceFiles,
       redoStack: redoStack.slice(0, -1),
       undoStack: [
         ...undoStack.slice(-14),
-        { pages: [...pages], sourceFiles: [...sourceFiles], description: nextSnapshot.description },
+        { pages: [...pages], allPages: [...allPages], sourceFiles: [...sourceFiles], description: nextSnapshot.description },
       ],
     });
 
@@ -515,12 +577,13 @@ export const usePdfStore = create<PdfState>((set, get) => ({
   },
 
   clearAll: () => {
-    const { pages, sourceFiles, undoStack } = get();
+    const { pages, allPages, sourceFiles, undoStack } = get();
     if (pages.length === 0 && sourceFiles.length === 0) return;
 
     fileBufferMap.clear();
     set({
       pages: [],
+      allPages: [],
       sourceFiles: [],
       selectedPageIds: [],
       activePreviewPageId: null,
@@ -529,7 +592,7 @@ export const usePdfStore = create<PdfState>((set, get) => ({
       processingMessage: '',
       undoStack: [
         ...undoStack.slice(-14),
-        { pages: [...pages], sourceFiles: [...sourceFiles], description: 'Clear all documents' },
+        { pages: [...pages], allPages: [...allPages], sourceFiles: [...sourceFiles], description: 'Clear all documents' },
       ],
       redoStack: [],
     });

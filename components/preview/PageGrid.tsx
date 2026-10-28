@@ -33,13 +33,13 @@ export function PageGrid() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 4,
+        distance: 3,
       },
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 150,
-        tolerance: 6,
+        delay: 100,
+        tolerance: 8,
       },
     }),
     useSensor(KeyboardSensor, {

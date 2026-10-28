@@ -40,6 +40,12 @@ export default function Home() {
   } = usePdfStore();
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
+  }, []);
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't intercept if user is typing in form controls
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
@@ -103,7 +109,7 @@ export default function Home() {
         />
 
         {/* Central Workspace Canvas */}
-        <main className="flex-1 overflow-y-auto bg-zinc-50/50 dark:bg-zinc-950 p-4 sm:p-6 lg:p-8 pb-32">
+        <main className="flex-1 overflow-y-auto bg-zinc-50/50 dark:bg-zinc-950 p-4 sm:p-6 lg:p-8 pb-52 sm:pb-60">
           <div className="max-w-7xl mx-auto space-y-6">
             {pages.length === 0 ? (
               // Empty State
@@ -216,6 +222,9 @@ export default function Home() {
 
                 {/* Page Grid */}
                 <PageGrid />
+
+                {/* Bottom clearance spacer to ensure bottom row cards never collide with floating export bar */}
+                <div className="h-28 sm:h-20" aria-hidden="true" />
               </div>
             )}
           </div>

@@ -12,7 +12,7 @@ export function applyPageCrop(page: PDFPage, crop?: CropBox, extraRotation = 0) 
 
   if (isVertical) {
     const left = Math.max(0, Math.min(0.95, crop.left ?? 0));
-    const right = Math.max(left + 0.05, Math.min(1, crop.right ?? 1));
+    const right = Math.max(left + 0.02, Math.min(1, crop.right ?? 1));
 
     if (netRotation === 0) {
       const cropX = box.x + box.width * left;
@@ -38,7 +38,7 @@ export function applyPageCrop(page: PDFPage, crop?: CropBox, extraRotation = 0) 
   } else {
     // Horizontal split (top / bottom)
     const top = Math.max(0, Math.min(0.95, crop.top ?? 0));
-    const bottom = Math.max(top + 0.05, Math.min(1, crop.bottom ?? 1));
+    const bottom = Math.max(top + 0.02, Math.min(1, crop.bottom ?? 1));
 
     if (netRotation === 0) {
       const cropY = box.y + box.height * (1 - bottom);

@@ -12,7 +12,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Sliders,
-  Files,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -74,9 +73,6 @@ export function Header({
         </button>
 
         <div className="flex items-center gap-2">
-          <div className="h-7 w-7 rounded-md bg-zinc-900 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900 flex items-center justify-center font-bold text-xs">
-            <Files className="w-3.5 h-3.5" />
-          </div>
           <span className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
             PDF Tools
           </span>

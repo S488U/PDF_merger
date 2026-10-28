@@ -89,16 +89,21 @@ export function PageCard({ page, sourceColor = '#71717a', index }: PageCardProps
           : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 shadow-2xs'
       }`}
     >
-      {/* Top Header Strip: Checkbox, source tag, index, grab handle */}
-      <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/80">
-        <div className="flex items-center gap-1.5 min-w-0">
+      {/* Top Header Strip: Drag Handle & Document Identity */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="flex items-center justify-between px-2.5 py-1.5 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 cursor-grab active:cursor-grabbing touch-none select-none"
+      >
+        <div className="flex items-center gap-1.5 min-w-0 flex-1 mr-1">
           <button
             type="button"
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation();
               togglePageSelection(page.id, true);
             }}
-            className={`w-4 h-4 rounded flex items-center justify-center transition border ${
+            className={`w-4 h-4 rounded shrink-0 flex items-center justify-center transition border ${
               isSelected
                 ? 'bg-zinc-900 border-zinc-900 text-white dark:bg-zinc-100 dark:border-zinc-100 dark:text-zinc-900'
                 : 'border-zinc-300 dark:border-zinc-700 hover:border-zinc-500 bg-white dark:bg-zinc-800'
@@ -109,30 +114,29 @@ export function PageCard({ page, sourceColor = '#71717a', index }: PageCardProps
           </button>
 
           <span
-            className="w-2 h-2 rounded-full shrink-0"
+            className="w-2 h-2 rounded-full shrink-0 ring-1 ring-black/10 dark:ring-white/20"
             style={{ backgroundColor: sourceColor }}
-            title={page.fileName}
           />
 
-          <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 truncate max-w-[100px]">
-            {page.sectionLabel ? page.sectionLabel : `P.${page.displayPageNumber}`}
+          <span
+            className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300 truncate"
+            title={page.fileName}
+          >
+            {page.fileName}
           </span>
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
-          <span className="text-xs font-mono font-medium text-zinc-500 dark:text-zinc-400 px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800">
+          <span
+            className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-zinc-200/80 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
+            title="Order in final merged document"
+          >
             #{index + 1}
           </span>
 
-          <button
-            type="button"
-            {...attributes}
-            {...listeners}
-            className="p-1 rounded text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 cursor-grab active:cursor-grabbing touch-none transition"
-            aria-label="Drag to rearrange"
-          >
+          <div className="text-zinc-400 p-0.5">
             <GripVertical className="w-3.5 h-3.5" />
-          </button>
+          </div>
         </div>
       </div>
 
@@ -155,15 +159,16 @@ export function PageCard({ page, sourceColor = '#71717a', index }: PageCardProps
           </div>
         )}
 
-        {page.rotation > 0 && (
-          <span className="absolute bottom-2 left-2 text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-zinc-900/80 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs">
-            {page.rotation}°
+        {/* Source Page Number Badge */}
+        <div className="absolute top-2 left-2 z-10 pointer-events-none">
+          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-zinc-900/90 text-white dark:bg-zinc-100/90 dark:text-zinc-900 shadow-xs backdrop-blur-xs">
+            {page.sectionLabel ? `P.${page.displayPageNumber} • ${page.sectionLabel}` : `Page ${page.displayPageNumber}`}
           </span>
-        )}
+        </div>
 
-        {page.sectionLabel && (
-          <span className="absolute top-2 left-2 text-[10px] font-semibold px-2 py-0.5 rounded bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs">
-            {page.sectionLabel}
+        {page.rotation > 0 && (
+          <span className="absolute bottom-2 left-2 text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-zinc-900/80 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-xs z-10">
+            {page.rotation}°
           </span>
         )}
 
@@ -182,7 +187,7 @@ export function PageCard({ page, sourceColor = '#71717a', index }: PageCardProps
             e.stopPropagation();
             rotatePage(page.id, 90);
           }}
-          className="h-8 w-8 rounded-md flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+          className="h-9 w-9 sm:h-8 sm:w-8 rounded-md flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
           title="Rotate 90° clockwise (R)"
           aria-label="Rotate 90°"
         >
@@ -195,7 +200,7 @@ export function PageCard({ page, sourceColor = '#71717a', index }: PageCardProps
             e.stopPropagation();
             setActiveSplitPageId(page.id);
           }}
-          className="h-8 w-8 rounded-md flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+          className="h-9 w-9 sm:h-8 sm:w-8 rounded-md flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
           title="Split page into 2 sections"
           aria-label="Split page"
         >
@@ -205,7 +210,7 @@ export function PageCard({ page, sourceColor = '#71717a', index }: PageCardProps
         <button
           type="button"
           onClick={handleDownloadSingle}
-          className="h-8 w-8 rounded-md flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+          className="h-9 w-9 sm:h-8 sm:w-8 rounded-md flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
           title="Download this page"
           aria-label="Download page"
         >
@@ -218,7 +223,7 @@ export function PageCard({ page, sourceColor = '#71717a', index }: PageCardProps
             e.stopPropagation();
             deletePage(page.id);
           }}
-          className="h-8 w-8 rounded-md flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
+          className="h-9 w-9 sm:h-8 sm:w-8 rounded-md flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
           title="Delete page"
           aria-label="Delete page"
         >
