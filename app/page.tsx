@@ -2,22 +2,45 @@
 
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/header/Header';
-import { SettingsModal } from '@/components/header/SettingsModal';
+import { StudioSidebar } from '@/components/sidebar/StudioSidebar';
 import { ShortcutsModal } from '@/components/modals/ShortcutsModal';
 import { DropZone } from '@/components/upload/DropZone';
-import { SourceFileList } from '@/components/source-files/SourceFileList';
 import { PageGrid } from '@/components/preview/PageGrid';
 import { PreviewModal } from '@/components/modals/PreviewModal';
 import { SplitToolModal } from '@/components/modals/SplitToolModal';
 import { StickyFooter } from '@/components/footer/StickyFooter';
 import { ToastContainer } from '@/components/ui/ToastContainer';
 import { usePdfStore } from '@/lib/store/usePdfStore';
-import { LayoutGrid, Sparkles } from 'lucide-react';
+import {
+  LayoutGrid,
+  RotateCw,
+  Trash2,
+  CheckSquare,
+  Square,
+  Plus,
+  Sliders,
+  Filter,
+  Files,
+} from 'lucide-react';
+import type { GridDensity } from '@/types/pdf';
 
 export default function Home() {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [sidebarTab, setSidebarTab] = useState<'files' | 'filter' | 'settings'>('files');
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
-  const { undo, redo, pages, settings } = usePdfStore();
+
+  const {
+    undo,
+    redo,
+    pages,
+    selectedPageIds,
+    selectAllPages,
+    clearSelection,
+    rotateSelectedPages,
+    deleteSelectedPages,
+    settings,
+    updateSettings,
+  } = usePdfStore();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -37,6 +60,9 @@ export default function Home() {
       } else if (modifier && (e.key === 'y' || e.key === 'Y')) {
         e.preventDefault();
         redo();
+      } else if (modifier && (e.key === 'b' || e.key === 'B')) {
+        e.preventDefault();
+        setIsSidebarOpen((prev) => !prev);
       } else if (e.key === '?' || (e.shiftKey && e.key === '/')) {
         e.preventDefault();
         setIsShortcutsOpen((prev) => !prev);
@@ -47,46 +73,162 @@ export default function Home() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [undo, redo]);
 
+  const hasSelectedPages = selectedPageIds.length > 0;
+  const allSelected = pages.length > 0 && selectedPageIds.length === pages.length;
+
+  const densities: { id: GridDensity; label: string }[] = [
+    { id: 'compact', label: 'Compact' },
+    { id: 'comfortable', label: 'Standard' },
+    { id: 'spacious', label: 'Spacious' },
+  ];
+
   return (
-    <main className="min-h-screen flex flex-col bg-[#f8f9fa] dark:bg-[#0b0d13] pb-28 text-slate-900 dark:text-slate-100 transition-colors">
+    <div className="min-h-screen flex flex-col bg-[#f8fafc] dark:bg-[#08090d] text-slate-900 dark:text-zinc-100 transition-colors">
+      {/* Top Application Header */}
       <Header
-        onOpenSettings={() => setIsSettingsOpen(true)}
+        isSidebarOpen={isSidebarOpen}
+        onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+        onOpenSettingsTab={() => {
+          setIsSidebarOpen(true);
+          setSidebarTab('settings');
+        }}
         onOpenShortcuts={() => setIsShortcutsOpen(true)}
       />
 
-      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 space-y-6 flex-1">
-        <DropZone />
+      {/* Main SaaS Studio Workspace: Sidebar + Central Canvas */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Studio Sidebar (Files, Filter, Settings) */}
+        <StudioSidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          activeTab={sidebarTab}
+          onTabChange={(t) => setSidebarTab(t)}
+        />
 
-        <SourceFileList />
+        {/* Central Workspace Canvas */}
+        <main className="flex-1 overflow-y-auto bg-grid relative p-4 sm:p-6 lg:p-8 pb-32">
+          <div className="max-w-7xl mx-auto space-y-6">
+            {pages.length === 0 ? (
+              // Empty State Ingestion
+              <DropZone />
+            ) : (
+              // Populated Canvas Workspace
+              <div className="space-y-4">
+                {/* Canvas Action Bar */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/80 dark:bg-[#111422]/90 backdrop-blur-md p-3 rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-xs">
+                  {/* Left: Selection count & batch actions */}
+                  <div className="flex items-center gap-2">
+                    {hasSelectedPages ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-800/50">
+                          {selectedPageIds.length} selected
+                        </span>
 
-        {pages.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 px-0.5">
-              <div className="flex items-center gap-2">
-                <LayoutGrid className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <h2 className="text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100">
-                  Page Sequence Canvas ({pages.length})
-                </h2>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-400 capitalize">
-                  {settings.gridDensity}
-                </span>
+                        <button
+                          type="button"
+                          onClick={() => rotateSelectedPages(90)}
+                          className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-zinc-800 transition"
+                          title="Rotate selected pages 90°"
+                        >
+                          <RotateCw className="w-3.5 h-3.5" />
+                          <span>Rotate</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Delete ${selectedPageIds.length} selected pages?`)) {
+                              deleteSelectedPages();
+                            }
+                          }}
+                          className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-500 transition shadow-2xs"
+                          title="Delete selected pages"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Delete</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={clearSelection}
+                          className="px-2 py-1 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 transition"
+                        >
+                          Deselect
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={allSelected ? clearSelection : selectAllPages}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-300 transition"
+                        >
+                          {allSelected ? (
+                            <>
+                              <CheckSquare className="w-3.5 h-3.5 text-indigo-500" />
+                              <span>Deselect All</span>
+                            </>
+                          ) : (
+                            <>
+                              <Square className="w-3.5 h-3.5" />
+                              <span>Select All ({pages.length})</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right: Quick Canvas Density segmented control & Add PDFs */}
+                  <div className="flex items-center gap-2 self-end sm:self-auto">
+                    {/* Density Control */}
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-zinc-850 p-1 rounded-xl border border-slate-200/80 dark:border-white/[0.08]">
+                      {densities.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => updateSettings({ gridDensity: item.id })}
+                          className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition ${
+                            settings.gridDensity === item.id
+                              ? 'bg-white dark:bg-zinc-900 text-indigo-600 dark:text-indigo-400 shadow-2xs'
+                              : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Quick Sidebar Opener buttons if sidebar is closed */}
+                    {!isSidebarOpen && (
+                      <button
+                        type="button"
+                        onClick={() => setIsSidebarOpen(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-300 transition"
+                      >
+                        <Sliders className="w-3.5 h-3.5" />
+                        <span>Tools</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Sortable Page Cards Canvas */}
+                <PageGrid />
               </div>
-              <span className="text-xs text-slate-500 dark:text-slate-400">
-                Drag handles to reorder • Hover to inspect • Use toolbar to rotate/split/delete
-              </span>
-            </div>
-
-            <PageGrid />
+            )}
           </div>
-        )}
+        </main>
       </div>
 
+      {/* Floating Action Island Dock */}
+      <StickyFooter />
+
+      {/* Overlays & Modals */}
       <PreviewModal />
       <SplitToolModal />
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
       <ToastContainer />
-      <StickyFooter />
-    </main>
+    </div>
   );
 }

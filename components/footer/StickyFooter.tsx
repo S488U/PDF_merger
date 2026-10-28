@@ -12,6 +12,7 @@ import {
   FolderCheck,
   FileEdit,
   AlertCircle,
+  Sparkles,
 } from 'lucide-react';
 
 export function StickyFooter() {
@@ -76,59 +77,54 @@ export function StickyFooter() {
   };
 
   return (
-    <footer className="fixed bottom-0 left-0 right-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/90 dark:border-slate-800 px-4 py-2.5 sm:px-6 shadow-xl transition-colors">
-      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-        {/* Output filename field */}
+    <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-30 max-w-3xl w-[92vw] pointer-events-auto">
+      <div className="bg-white/95 dark:bg-[#111422]/95 backdrop-blur-xl border border-slate-200 dark:border-white/[0.1] rounded-2xl px-4 py-2.5 sm:px-5 sm:py-3 shadow-2xl shadow-black/20 flex flex-col sm:flex-row items-center justify-between gap-3">
+        {/* Left: Output filename */}
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
-            <FileEdit className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-            <span className="hidden sm:inline">Filename:</span>
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-zinc-400 whitespace-nowrap">
+            <FileEdit className="w-3.5 h-3.5 text-indigo-500" />
+            <span className="hidden sm:inline">Name:</span>
           </div>
-          <div className="relative flex-1 sm:w-64">
+          <div className="relative flex-1 sm:w-60">
             <input
               type="text"
               value={outputName}
               onChange={(e) => setOutputName(e.target.value)}
               placeholder="merged-document.pdf"
-              className="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 font-mono focus:outline-hidden focus:ring-2 focus:ring-indigo-500 font-medium"
             />
           </div>
+
           {downloadDirectoryHandle && (
             <span
               className="hidden lg:flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60"
               title={`Direct destination: ${downloadDirectoryHandle.name}`}
             >
               <FolderCheck className="w-3 h-3" />
-              <span className="truncate max-w-[100px]">{downloadDirectoryHandle.name}</span>
+              <span className="truncate max-w-[90px]">{downloadDirectoryHandle.name}</span>
             </span>
           )}
         </div>
 
-        {/* Action Button & Document Summary */}
+        {/* Right: Page Count & Primary Merge CTA */}
         <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
-          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
-            <FileCheck className="w-3.5 h-3.5 text-blue-500" />
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-zinc-400 font-medium">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span>
-              <strong>{pages.length}</strong> {pages.length === 1 ? 'page' : 'pages'} ready
+              <strong>{pages.length}</strong> {pages.length === 1 ? 'page' : 'pages'}
             </span>
           </div>
-
-          {lastErrorMessage && (
-            <span className="text-[11px] text-red-500 flex items-center gap-1 font-medium">
-              <AlertCircle className="w-3 h-3" /> Error during merge
-            </span>
-          )}
 
           <button
             type="button"
             onClick={handleMergeAndDownload}
             disabled={isMerging}
-            className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-xs font-bold text-white shadow-md transition-all active:scale-98 select-none ${
+            className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white shadow-xl transition-all active:scale-98 select-none ${
               isMerging
-                ? 'bg-blue-600/70 cursor-not-allowed shadow-none'
+                ? 'bg-indigo-600/70 cursor-not-allowed shadow-none'
                 : downloadSuccess
-                ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20'
-                : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/25'
+                ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20'
+                : 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-indigo-500/30 hover:shadow-indigo-500/40'
             }`}
           >
             {isMerging ? (
@@ -139,17 +135,17 @@ export function StickyFooter() {
             ) : downloadSuccess ? (
               <>
                 <CheckCircle2 className="w-4 h-4" />
-                <span>Downloaded!</span>
+                <span>Downloaded Successfully!</span>
               </>
             ) : (
               <>
                 <Download className="w-4 h-4" />
-                <span>Merge & Download PDF</span>
+                <span>Export Merged PDF</span>
               </>
             )}
           </button>
         </div>
       </div>
-    </footer>
+    </div>
   );
 }
