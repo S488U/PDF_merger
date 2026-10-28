@@ -28,15 +28,20 @@ export function DropZone() {
 
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
-      if (file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf') {
-        try {
-          const buffer = await file.arrayBuffer();
+      try {
+        const buffer = await file.arrayBuffer();
+        const isPdfName = file.name.toLowerCase().endsWith('.pdf');
+        const isPdfMime = file.type && (file.type === 'application/pdf' || file.type.includes('pdf'));
+        const header = new Uint8Array(buffer.slice(0, 5));
+        const isPdfMagic = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
+
+        if (isPdfName || isPdfMime || isPdfMagic) {
           filesToLoad.push({ file, buffer });
-        } catch (err) {
-          console.error('Error reading file buffer:', err);
+        } else {
           invalidCount++;
         }
-      } else {
+      } catch (err) {
+        console.error('Error reading file buffer:', err);
         invalidCount++;
       }
     }
@@ -88,7 +93,7 @@ export function DropZone() {
           ref={fileInputRef}
           type="file"
           multiple
-          accept="application/pdf,.pdf"
+          accept="application/pdf, .pdf, application/x-pdf"
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
           onChange={async (e) => {
             await handleFiles(e.target.files);
@@ -143,7 +148,7 @@ export function DropZone() {
           ref={fileInputRef}
           type="file"
           multiple
-          accept="application/pdf,.pdf"
+          accept="application/pdf, .pdf, application/x-pdf"
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
           onChange={async (e) => {
             await handleFiles(e.target.files);

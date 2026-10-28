@@ -21,7 +21,7 @@ import {
 import type { GridDensity } from '@/types/pdf';
 
 export default function Home() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<'files' | 'filter' | 'settings'>('files');
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
@@ -40,8 +40,8 @@ export default function Home() {
   } = usePdfStore();
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      setIsSidebarOpen(false);
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      setIsSidebarOpen(true);
     }
   }, []);
 

@@ -176,6 +176,15 @@ export const usePdfStore = create<PdfState>((set, get) => ({
       }
     }
 
+    if (newlyAddedPageCount === 0) {
+      set({
+        isProcessing: false,
+        processingMessage: '',
+      });
+      get().addToast('Could not parse PDF file(s). Please verify the document is not password-protected or corrupted.', 'error');
+      return;
+    }
+
     set({
       sourceFiles: newSourceFiles,
       pages: newPages,

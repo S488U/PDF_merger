@@ -124,16 +124,37 @@ export function StudioSidebar({
     if (!fileList || fileList.length === 0) return;
 
     const filesToLoad: { file: File; buffer: ArrayBuffer }[] = [];
+    let invalidCount = 0;
+
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
-      if (file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf') {
+      try {
         const buffer = await file.arrayBuffer();
-        filesToLoad.push({ file, buffer });
+        const isPdfName = file.name.toLowerCase().endsWith('.pdf');
+        const isPdfMime = file.type && (file.type === 'application/pdf' || file.type.includes('pdf'));
+        const header = new Uint8Array(buffer.slice(0, 5));
+        const isPdfMagic = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
+
+        if (isPdfName || isPdfMime || isPdfMagic) {
+          filesToLoad.push({ file, buffer });
+        } else {
+          invalidCount++;
+        }
+      } catch (err) {
+        console.error('Error reading file buffer:', err);
+        invalidCount++;
       }
+    }
+
+    if (invalidCount > 0) {
+      addToast(`${invalidCount} non-PDF file(s) ignored`, 'warning');
     }
 
     if (filesToLoad.length > 0) {
       await addSourceFiles(filesToLoad);
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        onClose();
+      }
     }
   };
 
@@ -166,19 +187,19 @@ export function StudioSidebar({
     <>
       {/* Mobile Drawer Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs z-40 md:hidden animate-fade-in"
+        className="fixed inset-0 top-14 bg-black/60 backdrop-blur-xs z-40 md:hidden animate-fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      <aside className="fixed inset-y-0 left-0 z-50 w-72 sm:w-80 md:relative md:inset-auto md:z-20 md:w-80 sm:md:w-88 shrink-0 flex flex-col bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 h-full top-0 shadow-xl md:shadow-none transition-all">
+      <aside className="fixed top-14 bottom-0 left-0 z-40 w-80 max-w-[85vw] md:relative md:top-0 md:inset-auto md:z-20 md:w-80 sm:md:w-88 shrink-0 flex flex-col bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 shadow-2xl md:shadow-none transition-all">
         {/* Sidebar Header with Tabs */}
         <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-2 bg-zinc-50/50 dark:bg-zinc-900/50">
           <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-md text-xs font-medium w-full">
             <button
               type="button"
               onClick={() => setStudioTab('files')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded transition ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded transition touch-manipulation ${
                 currentTab === 'files'
                   ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-2xs font-semibold'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
@@ -194,7 +215,7 @@ export function StudioSidebar({
             <button
               type="button"
               onClick={() => setStudioTab('filter')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded transition ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded transition touch-manipulation ${
                 currentTab === 'filter'
                   ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-2xs font-semibold'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
@@ -207,7 +228,7 @@ export function StudioSidebar({
             <button
               type="button"
               onClick={() => setStudioTab('settings')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded transition ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded transition touch-manipulation ${
                 currentTab === 'settings'
                   ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-2xs font-semibold'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
@@ -221,7 +242,7 @@ export function StudioSidebar({
           <button
             type="button"
             onClick={onClose}
-            className="h-8 w-8 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center transition shrink-0"
+            className="h-9 w-9 rounded-md text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center transition shrink-0 touch-manipulation active:scale-95"
             title="Close sidebar"
             aria-label="Close sidebar"
           >
@@ -248,27 +269,29 @@ export function StudioSidebar({
                   <button
                     type="button"
                     onClick={() => clearAll()}
-                    className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:underline font-medium transition"
+                    className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:underline font-medium transition touch-manipulation"
                   >
                     Clear all
                   </button>
                 )}
               </div>
 
-              <label className="relative w-full h-9 flex items-center justify-center gap-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 text-xs font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition cursor-pointer select-none">
+              <div className="relative w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition flex items-center justify-center gap-2 cursor-pointer overflow-hidden select-none touch-manipulation">
                 <input
                   type="file"
                   multiple
-                  accept="application/pdf,.pdf"
-                  className="sr-only"
+                  accept="application/pdf, .pdf, application/x-pdf"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                   onChange={async (e) => {
                     await handleFiles(e.target.files);
                     e.target.value = '';
                   }}
                 />
-                <Plus className="w-3.5 h-3.5" />
-                <span>Add Documents</span>
-              </label>
+                <Plus className="w-4 h-4 text-zinc-900 dark:text-zinc-100 pointer-events-none" />
+                <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 pointer-events-none">
+                  Add Documents
+                </span>
+              </div>
 
             {sourceFiles.length === 0 ? (
               <div className="text-center py-10 px-4 rounded-lg border border-dashed border-zinc-200 dark:border-zinc-800 space-y-2">
