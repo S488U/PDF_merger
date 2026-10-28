@@ -244,12 +244,12 @@ pdfTools/
 
 ## 7. Rollout & Verification Checklist
 
-- [ ] **Milestone 1**: Next.js 16 App Router initialized with TypeScript and Tailwind CSS.
-- [ ] **Milestone 2**: Zustand store implemented with full undo snapshot capability.
-- [ ] **Milestone 3**: `/api/upload` and `/api/merge` route handlers tested and secured.
-- [ ] **Milestone 4**: Page thumbnail rendering pipeline operational with lazy PDF.js workers.
-- [ ] **Milestone 5**: `@dnd-kit` drag-and-drop tested on both desktop mouse and mobile touch devices.
-- [ ] **Milestone 6**: Page rotation, deletion, filtering, and splitting fully functional.
-- [ ] **Milestone 7**: File System Access API and browser download flows verified.
-- [ ] **Milestone 8**: Production build (`bun run build`) passing with Turbopack.
+- [x] **Milestone 1**: Next.js 16 App Router initialized with TypeScript and Tailwind CSS.
+- [x] **Milestone 2**: Zustand store implemented with full undo snapshot capability.
+- [x] **Milestone 3**: `/api/upload` and `/api/merge` route handlers tested and secured.
+- [x] **Milestone 4**: Page thumbnail rendering pipeline operational with lazy PDF.js workers.
+- [x] **Milestone 5**: `@dnd-kit` drag-and-drop tested on both desktop mouse and mobile touch devices.
+- [x] **Milestone 6**: Page rotation, deletion, filtering, and splitting fully functional.
+- [x] **Milestone 7**: File System Access API and browser download flows verified.
+- [x] **Milestone 8**: Production build (`bun run build`) passing with Turbopack.
 - [ ] **Milestone 9**: Deployment to Vercel tested with end-to-end multi-page merge.
