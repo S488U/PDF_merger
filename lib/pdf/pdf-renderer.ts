@@ -43,41 +43,70 @@ export async function renderPageThumbnail(
     canvas,
   }).promise;
 
-  if (crop && typeof crop.top === 'number' && typeof crop.bottom === 'number') {
-    const top = Math.max(0, Math.min(0.95, crop.top));
-    const bottom = Math.max(top + 0.05, Math.min(1, crop.bottom));
+  if (crop) {
+    const isVertical = crop.direction === 'vertical' || (typeof crop.left === 'number' && typeof crop.right === 'number');
 
-    const cropY = canvas.height * top;
-    const cropHeight = canvas.height * (bottom - top);
+    if (isVertical) {
+      const left = Math.max(0, Math.min(0.95, crop.left ?? 0));
+      const right = Math.max(left + 0.05, Math.min(1, crop.right ?? 1));
 
-    const croppedCanvas = document.createElement('canvas');
-    croppedCanvas.width = canvas.width;
-    croppedCanvas.height = cropHeight;
-    const croppedCtx = croppedCanvas.getContext('2d');
-    if (croppedCtx) {
-      croppedCtx.drawImage(
-        canvas,
-        0,
-        cropY,
-        canvas.width,
-        cropHeight,
-        0,
-        0,
-        canvas.width,
-        cropHeight
-      );
-      return croppedCanvas.toDataURL('image/jpeg', 0.82);
+      const cropX = canvas.width * left;
+      const cropWidth = canvas.width * (right - left);
+
+      const croppedCanvas = document.createElement('canvas');
+      croppedCanvas.width = cropWidth;
+      croppedCanvas.height = canvas.height;
+      const croppedCtx = croppedCanvas.getContext('2d');
+      if (croppedCtx) {
+        croppedCtx.drawImage(
+          canvas,
+          cropX,
+          0,
+          cropWidth,
+          canvas.height,
+          0,
+          0,
+          cropWidth,
+          canvas.height
+        );
+        return croppedCanvas.toDataURL('image/jpeg', 0.85);
+      }
+    } else if (typeof crop.top === 'number' && typeof crop.bottom === 'number') {
+      const top = Math.max(0, Math.min(0.95, crop.top));
+      const bottom = Math.max(top + 0.05, Math.min(1, crop.bottom));
+
+      const cropY = canvas.height * top;
+      const cropHeight = canvas.height * (bottom - top);
+
+      const croppedCanvas = document.createElement('canvas');
+      croppedCanvas.width = canvas.width;
+      croppedCanvas.height = cropHeight;
+      const croppedCtx = croppedCanvas.getContext('2d');
+      if (croppedCtx) {
+        croppedCtx.drawImage(
+          canvas,
+          0,
+          cropY,
+          canvas.width,
+          cropHeight,
+          0,
+          0,
+          canvas.width,
+          cropHeight
+        );
+        return croppedCanvas.toDataURL('image/jpeg', 0.85);
+      }
     }
   }
 
-  return canvas.toDataURL('image/jpeg', 0.82);
+  return canvas.toDataURL('image/jpeg', 0.85);
 }
 
 export async function renderHighResPage(
   buffer: ArrayBuffer,
   pageIndex: number,
   rotation: number = 0,
-  scale: number = 1.5
+  scale: number = 1.6
 ): Promise<{ dataUrl: string; width: number; height: number }> {
   const pdfjs = await getPdfJs();
   if (!pdfjs) return { dataUrl: '', width: 0, height: 0 };
