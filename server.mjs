@@ -15,6 +15,19 @@ const app = express();
 // Configure multer to use the temporary directory
 const upload = multer({ dest: UPLOADS_DIR });
 
+function applyPageCrop(page, crop) {
+  if (!crop || typeof crop.top !== "number" || typeof crop.bottom !== "number") return;
+
+  const box = page.getCropBox();
+  const top = Math.max(0, Math.min(0.95, crop.top));
+  const bottom = Math.max(top + 0.05, Math.min(1, crop.bottom));
+  const cropY = box.y + box.height * (1 - bottom);
+  const cropHeight = box.height * (bottom - top);
+
+  page.setCropBox(box.x, cropY, box.width, cropHeight);
+  page.setMediaBox(box.x, cropY, box.width, cropHeight);
+}
+
 // Serve the dynamically created uploads from the temporary directory
 app.use("/uploads", express.static(UPLOADS_DIR));
 app.use(express.json());
@@ -63,7 +76,7 @@ app.post("/merge", async (req, res) => {
     const loadedPdfs = new Map();
 
     for (const pageData of order) {
-      const { file, pageIndex, rotation } = pageData;
+      const { file, pageIndex, rotation, crop } = pageData;
       let pdfDoc;
       if (loadedPdfs.has(file)) {
         pdfDoc = loadedPdfs.get(file);
@@ -79,6 +92,7 @@ app.post("/merge", async (req, res) => {
       if (rotation) {
         copiedPage.setRotation(degrees(rotation));
       }
+      applyPageCrop(copiedPage, crop);
       mergedPdf.addPage(copiedPage);
     }
 

@@ -11,6 +11,9 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// port number
+const port = 3001;
+
 // 1. CONFIGURATION
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB Limit
 const UPLOAD_DIR = path.join(__dirname, "uploads");
@@ -25,6 +28,19 @@ const upload = multer({
   dest: "uploads/",
   limits: { fileSize: MAX_FILE_SIZE } 
 });
+
+function applyPageCrop(page, crop) {
+  if (!crop || typeof crop.top !== "number" || typeof crop.bottom !== "number") return;
+
+  const box = page.getCropBox();
+  const top = Math.max(0, Math.min(0.95, crop.top));
+  const bottom = Math.max(top + 0.05, Math.min(1, crop.bottom));
+  const cropY = box.y + box.height * (1 - bottom);
+  const cropHeight = box.height * (bottom - top);
+
+  page.setCropBox(box.x, cropY, box.width, cropHeight);
+  page.setMediaBox(box.x, cropY, box.width, cropHeight);
+}
 
 // 3. MIDDLEWARE
 app.use(express.static("public"));
@@ -163,6 +179,8 @@ app.post("/merge", async (req, res) => {
           const currentRotation = page.getRotation().angle;
           page.setRotation(degrees(currentRotation + reqPage.rotation));
         }
+
+        applyPageCrop(page, reqPage.crop);
         
         finalPages[reqPage.finalOrderIndex] = page;
       });
@@ -196,7 +214,7 @@ app.post("/merge", async (req, res) => {
   }
 });
 
-const PORT = 3000;
+const PORT = port || 3000;
 app.listen(PORT, () =>
   console.log(`🚀 Server running at http://localhost:${PORT}`)
 );
