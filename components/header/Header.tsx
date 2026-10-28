@@ -12,7 +12,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Sliders,
-  Sparkles,
+  Files,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -56,117 +56,101 @@ export function Header({
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full h-14 bg-white/90 dark:bg-[#090a10]/90 backdrop-blur-xl border-b border-slate-200 dark:border-white/[0.08] px-3 sm:px-5 transition-colors flex items-center justify-between">
-      {/* Left: Sidebar Toggle, Brand, Status Crumb */}
+    <header className="sticky top-0 z-30 w-full h-14 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 transition-colors flex items-center justify-between">
+      {/* Left: Sidebar Toggle, Brand & Document Status */}
       <div className="flex items-center gap-3">
-        {/* Sidebar Toggle Button */}
         <button
           type="button"
           onClick={onToggleSidebar}
-          className={`p-2 rounded-xl border transition flex items-center justify-center ${
+          className={`h-9 w-9 rounded-md border flex items-center justify-center transition ${
             isSidebarOpen
-              ? 'border-indigo-500/40 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400'
-              : 'border-slate-200 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-500 dark:text-zinc-400'
+              ? 'border-zinc-900 bg-zinc-900 text-zinc-50 dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900'
+              : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
           }`}
-          title={isSidebarOpen ? 'Hide Studio Sidebar' : 'Show Studio Sidebar'}
-          aria-label="Toggle Studio Sidebar"
+          title={isSidebarOpen ? 'Hide sidebar (Ctrl+B)' : 'Show sidebar (Ctrl+B)'}
+          aria-label="Toggle sidebar"
         >
           {isSidebarOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
         </button>
 
-        {/* Brand */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/25 shrink-0">
-            <Sparkles className="w-4 h-4" />
+        <div className="flex items-center gap-2">
+          <div className="h-7 w-7 rounded-md bg-zinc-900 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900 flex items-center justify-center font-bold text-xs">
+            <Files className="w-3.5 h-3.5" />
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-              PDF Studio
-            </span>
-            <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-800/50">
-              SaaS Pro
-            </span>
-          </div>
+          <span className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+            PDF Tools
+          </span>
         </div>
 
-        {/* Document Stats Crumb */}
-        <div className="hidden md:flex items-center gap-2 pl-3 border-l border-slate-200 dark:border-white/[0.08] text-xs text-slate-500 dark:text-zinc-400">
-          {pages.length > 0 ? (
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>{sourceFiles.length} {sourceFiles.length === 1 ? 'file' : 'files'}</span>
-              <span>•</span>
-              <span className="font-semibold text-slate-800 dark:text-zinc-200">{pages.length} pages</span>
-            </span>
-          ) : (
-            <span>Ready for documents</span>
-          )}
-        </div>
+        {pages.length > 0 && (
+          <div className="hidden sm:flex items-center gap-2 pl-3 border-l border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+            <span>{sourceFiles.length} {sourceFiles.length === 1 ? 'file' : 'files'}</span>
+            <span>•</span>
+            <span className="text-zinc-900 dark:text-zinc-200 font-semibold">{pages.length} pages</span>
+          </div>
+        )}
       </div>
 
-      {/* Right: History, Clear, Theme, Shortcuts, Settings */}
+      {/* Right: History controls, Shortcuts, Theme, Settings */}
       <div className="flex items-center gap-1.5 sm:gap-2">
         {pages.length > 0 && (
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-zinc-850 p-1 rounded-xl border border-slate-200 dark:border-white/[0.08]">
-            {/* Undo */}
+          <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-md border border-zinc-200 dark:border-zinc-800">
             <button
               type="button"
               onClick={undo}
               disabled={!canUndo}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition ${
+              className={`h-7 px-2.5 rounded text-xs font-medium flex items-center gap-1.5 transition ${
                 canUndo
-                  ? 'hover:bg-white dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 shadow-2xs'
-                  : 'opacity-30 cursor-not-allowed text-slate-400 dark:text-zinc-500'
+                  ? 'hover:bg-white dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 shadow-2xs'
+                  : 'opacity-35 cursor-not-allowed text-zinc-400'
               }`}
-              title="Undo (Ctrl+Z / ⌘Z)"
+              title="Undo (Ctrl+Z)"
               aria-label="Undo"
             >
               <Undo2 className="w-3.5 h-3.5" />
-              <span className="hidden lg:inline">Undo</span>
+              <span className="hidden md:inline">Undo</span>
             </button>
 
-            {/* Redo */}
             <button
               type="button"
               onClick={redo}
               disabled={!canRedo}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition ${
+              className={`h-7 px-2.5 rounded text-xs font-medium flex items-center gap-1.5 transition ${
                 canRedo
-                  ? 'hover:bg-white dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 shadow-2xs'
-                  : 'opacity-30 cursor-not-allowed text-slate-400 dark:text-zinc-500'
+                  ? 'hover:bg-white dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 shadow-2xs'
+                  : 'opacity-35 cursor-not-allowed text-zinc-400'
               }`}
-              title="Redo (Ctrl+Y / ⌘⇧Z)"
+              title="Redo (Ctrl+Y)"
               aria-label="Redo"
             >
               <Redo2 className="w-3.5 h-3.5" />
-              <span className="hidden lg:inline">Redo</span>
+              <span className="hidden md:inline">Redo</span>
             </button>
 
-            <div className="w-px h-3.5 bg-slate-200 dark:bg-white/10 mx-0.5" />
+            <div className="w-px h-3.5 bg-zinc-300 dark:bg-zinc-700 mx-0.5" />
 
-            {/* Clear All */}
             <button
               type="button"
               onClick={() => {
-                if (confirm('Clear entire document workspace? (You can undo with Ctrl+Z)')) {
+                if (confirm('Clear entire canvas? (Ctrl+Z to undo)')) {
                   clearAll();
                 }
               }}
-              className="p-1 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
-              title="Clear Canvas"
-              aria-label="Clear Canvas"
+              className="h-7 w-7 rounded flex items-center justify-center text-zinc-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
+              title="Clear all pages"
+              aria-label="Clear all pages"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
 
-        {/* Shortcuts Help */}
+        {/* Shortcuts */}
         <button
           type="button"
           onClick={onOpenShortcuts}
-          className="p-2 rounded-xl border border-slate-200 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 transition"
-          title="Keyboard Shortcuts (?)"
+          className="h-9 w-9 rounded-md border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center transition"
+          title="Shortcuts (?)"
           aria-label="Keyboard Shortcuts"
         >
           <HelpCircle className="w-4 h-4" />
@@ -176,22 +160,23 @@ export function Header({
         <button
           type="button"
           onClick={toggleTheme}
-          className="p-2 rounded-xl border border-slate-200 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 transition"
+          className="h-9 w-9 rounded-md border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center transition"
           title={`Switch to ${settings.theme === 'dark' ? 'light' : 'dark'} mode`}
           aria-label="Toggle theme"
         >
           {settings.theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
         </button>
 
-        {/* Settings Tab Button */}
+        {/* Settings button */}
         <button
           type="button"
           onClick={onOpenSettingsTab}
-          className="p-2 rounded-xl border border-slate-200 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 transition"
+          className="h-9 px-3 rounded-md border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5 text-xs font-medium transition"
           title="Studio Settings"
           aria-label="Studio Settings"
         >
-          <Sliders className="w-4 h-4" />
+          <Sliders className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Settings</span>
         </button>
       </div>
     </header>
