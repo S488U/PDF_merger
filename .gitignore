@@ -3,3 +3,4 @@ uploads/*
 .vercel
 .next
 next-env.d.ts
+*.tsbuildinfo
