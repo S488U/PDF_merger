@@ -13,8 +13,6 @@ import {
   Layers,
   Loader2,
   Plus,
-  ArrowRight,
-  Sparkles,
 } from 'lucide-react';
 
 export function DropZone() {
@@ -73,7 +71,7 @@ export function DropZone() {
     fileInputRef.current?.click();
   };
 
-  // When workspace already has pages: render a sleek, modern inline upload bar
+  // When workspace already has pages: render a sleek, clean append bar
   if (pages.length > 0) {
     return (
       <div
@@ -81,10 +79,10 @@ export function DropZone() {
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         onClick={triggerBrowse}
-        className={`group relative w-full flex items-center justify-between px-4 sm:px-6 py-3 rounded-2xl border transition-all cursor-pointer ${
+        className={`group relative w-full flex items-center justify-between px-5 py-3.5 rounded-lg border transition-all cursor-pointer ${
           isDragOver
-            ? 'border-indigo-500 bg-indigo-500/10 ring-2 ring-indigo-500/20'
-            : 'border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#111420]/80 hover:border-indigo-400 dark:hover:border-indigo-500/50 hover:bg-slate-50 dark:hover:bg-[#151928] shadow-xs'
+            ? 'border-zinc-900 bg-zinc-100 dark:border-zinc-100 dark:bg-zinc-900'
+            : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 hover:border-zinc-400 dark:hover:border-zinc-700 shadow-2xs'
         }`}
       >
         <input
@@ -100,7 +98,7 @@ export function DropZone() {
         />
 
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shrink-0 shadow-xs shadow-indigo-500/20">
+          <div className="h-8 w-8 rounded-md bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-900 dark:text-zinc-100 shrink-0 border border-zinc-200 dark:border-zinc-700">
             {isProcessing ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
@@ -108,11 +106,11 @@ export function DropZone() {
             )}
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-800 dark:text-zinc-200">
-              {isProcessing ? processingMessage || 'Importing PDFs...' : 'Append more documents to canvas'}
+            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              {isProcessing ? processingMessage || 'Importing PDFs...' : 'Add more PDF files'}
             </p>
-            <p className="text-[11px] text-slate-500 dark:text-zinc-400 hidden sm:block">
-              Drop PDFs anywhere or click to browse
+            <p className="text-xs text-zinc-500 hidden sm:block">
+              Drop PDFs here or click to browse
             </p>
           </div>
         </div>
@@ -123,33 +121,29 @@ export function DropZone() {
             e.stopPropagation();
             triggerBrowse();
           }}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-white dark:bg-white dark:text-zinc-900 hover:opacity-90 transition shadow-xs"
+          className="h-8 px-3 rounded-md text-xs font-semibold bg-zinc-900 text-zinc-50 hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 transition shadow-2xs flex items-center gap-1.5"
         >
           <Plus className="w-3.5 h-3.5" />
-          <span>Upload PDF</span>
+          <span>Upload</span>
         </button>
       </div>
     );
   }
 
-  // When empty: SaaS-level Hero Empty State
+  // Clean, high-contrast shadcn Empty State
   return (
-    <div className="w-full max-w-4xl mx-auto py-10 sm:py-16 space-y-10">
-      {/* SaaS Hero Ingestion Card */}
+    <div className="w-full max-w-4xl mx-auto py-12 sm:py-20 space-y-12">
       <div
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         onClick={triggerBrowse}
-        className={`relative w-full rounded-3xl border p-8 sm:p-16 transition-all duration-300 cursor-pointer text-center flex flex-col items-center justify-center gap-5 overflow-hidden ${
+        className={`relative w-full rounded-xl border-2 border-dashed p-10 sm:p-16 transition-all duration-200 cursor-pointer text-center flex flex-col items-center justify-center gap-6 ${
           isDragOver
-            ? 'border-indigo-500 bg-indigo-500/10 scale-[1.01] ring-4 ring-indigo-500/20 shadow-2xl shadow-indigo-500/10'
-            : 'border-slate-200 dark:border-white/[0.08] bg-white/80 dark:bg-[#111422]/90 hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-500/5 shadow-md'
+            ? 'border-zinc-900 bg-zinc-100 dark:border-zinc-100 dark:bg-zinc-900'
+            : 'border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:border-zinc-400 dark:hover:border-zinc-700'
         }`}
       >
-        {/* Subtle Ambient Radial Glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 bg-gradient-to-b from-indigo-500/15 via-purple-500/5 to-transparent blur-3xl pointer-events-none" />
-
         <input
           ref={fileInputRef}
           type="file"
@@ -162,21 +156,20 @@ export function DropZone() {
           }}
         />
 
-        {/* Hero Icon */}
-        <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-xl shadow-indigo-500/25">
+        <div className="h-14 w-14 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-900 dark:text-zinc-100">
           {isProcessing ? (
-            <Loader2 className="w-9 h-9 animate-spin" />
+            <Loader2 className="w-6 h-6 animate-spin" />
           ) : (
-            <UploadCloud className="w-9 h-9" />
+            <UploadCloud className="w-6 h-6" />
           )}
         </div>
 
-        <div className="max-w-md space-y-2 relative z-10">
-          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            {isProcessing ? processingMessage || 'Reading PDF files...' : 'Drag & drop your PDFs here'}
+        <div className="max-w-md space-y-2">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+            {isProcessing ? processingMessage || 'Reading PDF files...' : 'Select or drop PDF documents'}
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400">
-            Combine multiple documents, reorganize pages, split sections, and rotate orientation in one unified workspace.
+          <p className="text-sm text-zinc-500 leading-relaxed">
+            Reorder pages, split sheets into sections, rotate orientations, and merge multiple documents locally in your browser.
           </p>
         </div>
 
@@ -186,61 +179,59 @@ export function DropZone() {
             e.stopPropagation();
             triggerBrowse();
           }}
-          className="relative z-10 inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-xl shadow-indigo-500/30 transition-all hover:scale-105 active:scale-98"
+          className="h-10 px-6 rounded-md text-sm font-semibold bg-zinc-900 text-zinc-50 hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 transition shadow-xs flex items-center gap-2"
         >
           <FilePlus2 className="w-4 h-4" />
-          <span>Browse Files from Device</span>
+          <span>Browse Files</span>
         </button>
 
-        {/* Feature Badges */}
-        <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-[11px] text-slate-500 dark:text-zinc-400 relative z-10">
-          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08]">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> 100% In-Browser Privacy
+        <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-xs text-zinc-500 font-medium">
+          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+            <ShieldCheck className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300" /> Private & local
           </span>
-          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08]">
-            <Zap className="w-3.5 h-3.5 text-amber-500" /> Instant Processing
+          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+            <Zap className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300" /> Instant processing
           </span>
-          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08]">
-            <FileText className="w-3.5 h-3.5 text-blue-500" /> Multiple PDF Merging
+          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+            <FileText className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300" /> Multiple file merge
           </span>
         </div>
       </div>
 
-      {/* Feature Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#111422] border border-slate-200 dark:border-white/[0.08] space-y-2.5 hover:border-indigo-500/40 transition shadow-xs group">
-          <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+        <div className="p-5 rounded-lg bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-2">
+          <div className="h-8 w-8 rounded-md bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-900 dark:text-zinc-100 font-semibold text-xs border border-zinc-200 dark:border-zinc-700">
             <Layers className="w-4 h-4" />
           </div>
-          <h3 className="text-xs font-bold text-slate-900 dark:text-white">
-            Visual Reordering
+          <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+            Reorder Pages
           </h3>
-          <p className="text-[11px] text-slate-500 dark:text-zinc-400 leading-relaxed">
-            Drag and drop individual pages seamlessly across files into your exact preferred document sequence.
+          <p className="text-xs text-zinc-500 leading-relaxed">
+            Drag and drop individual thumbnails across multiple files to organize pages in any order.
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#111422] border border-slate-200 dark:border-white/[0.08] space-y-2.5 hover:border-indigo-500/40 transition shadow-xs group">
-          <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+        <div className="p-5 rounded-lg bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-2">
+          <div className="h-8 w-8 rounded-md bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-900 dark:text-zinc-100 font-semibold text-xs border border-zinc-200 dark:border-zinc-700">
             <Scissors className="w-4 h-4" />
           </div>
-          <h3 className="text-xs font-bold text-slate-900 dark:text-white">
-            Page Splitter
+          <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+            Split Into Halves
           </h3>
-          <p className="text-[11px] text-slate-500 dark:text-zinc-400 leading-relaxed">
-            Divide double pages or books horizontally or vertically with an interactive visual cutting guide.
+          <p className="text-xs text-zinc-500 leading-relaxed">
+            Divide large pages horizontally or vertically with an interactive draggable cutting line.
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#111422] border border-slate-200 dark:border-white/[0.08] space-y-2.5 hover:border-indigo-500/40 transition shadow-xs group">
-          <div className="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+        <div className="p-5 rounded-lg bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-2">
+          <div className="h-8 w-8 rounded-md bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-900 dark:text-zinc-100 font-semibold text-xs border border-zinc-200 dark:border-zinc-700">
             <RotateCw className="w-4 h-4" />
           </div>
-          <h3 className="text-xs font-bold text-slate-900 dark:text-white">
+          <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
             Rotate & Filter
           </h3>
-          <p className="text-[11px] text-slate-500 dark:text-zinc-400 leading-relaxed">
-            Fix orientations in 90° steps and filter odd/even or custom ranges with instant preview feedback.
+          <p className="text-xs text-zinc-500 leading-relaxed">
+            Rotate orientations in 90° steps and filter odd/even or custom ranges with live match counts.
           </p>
         </div>
       </div>

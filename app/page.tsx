@@ -12,15 +12,11 @@ import { StickyFooter } from '@/components/footer/StickyFooter';
 import { ToastContainer } from '@/components/ui/ToastContainer';
 import { usePdfStore } from '@/lib/store/usePdfStore';
 import {
-  LayoutGrid,
   RotateCw,
   Trash2,
   CheckSquare,
   Square,
-  Plus,
   Sliders,
-  Filter,
-  Files,
 } from 'lucide-react';
 import type { GridDensity } from '@/types/pdf';
 
@@ -79,11 +75,11 @@ export default function Home() {
   const densities: { id: GridDensity; label: string }[] = [
     { id: 'compact', label: 'Compact' },
     { id: 'comfortable', label: 'Standard' },
-    { id: 'spacious', label: 'Spacious' },
+    { id: 'spacious', label: 'Large' },
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8fafc] dark:bg-[#08090d] text-slate-900 dark:text-zinc-100 transition-colors">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 transition-colors">
       {/* Top Application Header */}
       <Header
         isSidebarOpen={isSidebarOpen}
@@ -95,7 +91,7 @@ export default function Home() {
         onOpenShortcuts={() => setIsShortcutsOpen(true)}
       />
 
-      {/* Main SaaS Studio Workspace: Sidebar + Central Canvas */}
+      {/* Main Studio Workspace: Sidebar + Central Canvas */}
       <div className="flex-1 flex overflow-hidden">
         {/* Studio Sidebar (Files, Filter, Settings) */}
         <StudioSidebar
@@ -106,28 +102,28 @@ export default function Home() {
         />
 
         {/* Central Workspace Canvas */}
-        <main className="flex-1 overflow-y-auto bg-grid relative p-4 sm:p-6 lg:p-8 pb-32">
+        <main className="flex-1 overflow-y-auto bg-zinc-50/50 dark:bg-zinc-950 p-4 sm:p-6 lg:p-8 pb-32">
           <div className="max-w-7xl mx-auto space-y-6">
             {pages.length === 0 ? (
-              // Empty State Ingestion
+              // Empty State
               <DropZone />
             ) : (
-              // Populated Canvas Workspace
+              // Populated Canvas
               <div className="space-y-4">
-                {/* Canvas Action Bar */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/80 dark:bg-[#111422]/90 backdrop-blur-md p-3 rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-xs">
-                  {/* Left: Selection count & batch actions */}
+                {/* Canvas Action Toolbar */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-2xs">
+                  {/* Left: Selection and Batch controls */}
                   <div className="flex items-center gap-2">
                     {hasSelectedPages ? (
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-800/50">
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700">
                           {selectedPageIds.length} selected
                         </span>
 
                         <button
                           type="button"
                           onClick={() => rotateSelectedPages(90)}
-                          className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-zinc-800 transition"
+                          className="h-8 px-2.5 text-xs font-medium rounded-md border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5 transition"
                           title="Rotate selected pages 90°"
                         >
                           <RotateCw className="w-3.5 h-3.5" />
@@ -141,7 +137,7 @@ export default function Home() {
                               deleteSelectedPages();
                             }
                           }}
-                          className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-500 transition shadow-2xs"
+                          className="h-8 px-2.5 text-xs font-medium rounded-md bg-red-600 text-white hover:bg-red-700 flex items-center gap-1.5 transition"
                           title="Delete selected pages"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -151,7 +147,7 @@ export default function Home() {
                         <button
                           type="button"
                           onClick={clearSelection}
-                          className="px-2 py-1 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 transition"
+                          className="h-8 px-2 text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition"
                         >
                           Deselect
                         </button>
@@ -161,17 +157,17 @@ export default function Home() {
                         <button
                           type="button"
                           onClick={allSelected ? clearSelection : selectAllPages}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-300 transition"
+                          className="h-8 px-3 rounded-md border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-medium flex items-center gap-1.5 transition"
                         >
                           {allSelected ? (
                             <>
-                              <CheckSquare className="w-3.5 h-3.5 text-indigo-500" />
-                              <span>Deselect All</span>
+                              <CheckSquare className="w-3.5 h-3.5" />
+                              <span>Deselect all</span>
                             </>
                           ) : (
                             <>
                               <Square className="w-3.5 h-3.5" />
-                              <span>Select All ({pages.length})</span>
+                              <span>Select all ({pages.length})</span>
                             </>
                           )}
                         </button>
@@ -179,19 +175,18 @@ export default function Home() {
                     )}
                   </div>
 
-                  {/* Right: Quick Canvas Density segmented control & Add PDFs */}
+                  {/* Right: Canvas density segmented control */}
                   <div className="flex items-center gap-2 self-end sm:self-auto">
-                    {/* Density Control */}
-                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-zinc-850 p-1 rounded-xl border border-slate-200/80 dark:border-white/[0.08]">
+                    <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800/80 p-0.5 rounded-md border border-zinc-200 dark:border-zinc-800">
                       {densities.map((item) => (
                         <button
                           key={item.id}
                           type="button"
                           onClick={() => updateSettings({ gridDensity: item.id })}
-                          className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition ${
+                          className={`px-2.5 py-1 text-xs font-medium rounded transition ${
                             settings.gridDensity === item.id
-                              ? 'bg-white dark:bg-zinc-900 text-indigo-600 dark:text-indigo-400 shadow-2xs'
-                              : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100'
+                              ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-2xs font-semibold'
+                              : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
                           }`}
                         >
                           {item.label}
@@ -199,12 +194,11 @@ export default function Home() {
                       ))}
                     </div>
 
-                    {/* Quick Sidebar Opener buttons if sidebar is closed */}
                     {!isSidebarOpen && (
                       <button
                         type="button"
                         onClick={() => setIsSidebarOpen(true)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-300 transition"
+                        className="h-8 px-3 rounded-md border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-medium flex items-center gap-1.5 transition"
                       >
                         <Sliders className="w-3.5 h-3.5" />
                         <span>Tools</span>
@@ -213,7 +207,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Sortable Page Cards Canvas */}
+                {/* Page Grid */}
                 <PageGrid />
               </div>
             )}
@@ -221,7 +215,7 @@ export default function Home() {
         </main>
       </div>
 
-      {/* Floating Action Island Dock */}
+      {/* Floating Bottom Bar */}
       <StickyFooter />
 
       {/* Overlays & Modals */}
