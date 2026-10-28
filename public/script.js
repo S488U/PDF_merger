@@ -51,6 +51,10 @@ const settingsToggle = document.getElementById("settingsToggle");
 const settingsMenu = document.getElementById("settingsMenu");
 const defaultNamePatternInput = document.getElementById("defaultNamePattern");
 const autoResetAfterMergeInput = document.getElementById("autoResetAfterMerge");
+const individualPageSaveAsInput = document.getElementById("individualPageSaveAs");
+const chooseDownloadDirBtn = document.getElementById("chooseDownloadDirBtn");
+const clearDownloadDirBtn = document.getElementById("clearDownloadDirBtn");
+const downloadDirStatus = document.getElementById("downloadDirStatus");
 const walkthroughCard = document.getElementById("walkthroughCard");
 const dismissWalkthroughBtn = document.getElementById("dismissWalkthroughBtn");
 const pageFilterPanel = document.getElementById("pageFilterPanel");
@@ -64,14 +68,25 @@ let noticeToastTimer = null;
 let undoToastTimer = null;
 let undoSnapshot = null;
 let selectedPageId = null;
+let activeModalPage = null;
+let splitLinePercent = 50;
+let downloadDirectoryHandle = null;
 
 const SESSION_STORAGE_KEY = "pdf-tools-session-v1";
 const SETTINGS_STORAGE_KEY = "pdf-tools-settings-v1";
 const WALKTHROUGH_DISMISSED_KEY = "pdf-tools-walkthrough-dismissed-v1";
+const DOWNLOAD_DIR_DB = "pdf-tools-download-location";
+const DOWNLOAD_DIR_STORE = "handles";
+const DOWNLOAD_DIR_KEY = "selected-directory";
 const settings = {
     defaultNamePattern: "merged-{date}",
-    autoResetAfterMerge: false
+    autoResetAfterMerge: false,
+    individualPageSaveAs: false
 };
+
+function isFirefoxLikeBrowser() {
+    return /firefox|librewolf|waterfox|floorp/i.test(navigator.userAgent);
+}
 
 // --- INTERSECTION OBSERVER ---
 const imageObserver = new IntersectionObserver((entries, observer) => {
@@ -153,12 +168,194 @@ function loadSettings() {
             const parsed = JSON.parse(raw);
             if (typeof parsed.defaultNamePattern === "string") settings.defaultNamePattern = parsed.defaultNamePattern;
             if (typeof parsed.autoResetAfterMerge === "boolean") settings.autoResetAfterMerge = parsed.autoResetAfterMerge;
+            if (typeof parsed.individualPageSaveAs === "boolean") settings.individualPageSaveAs = parsed.individualPageSaveAs;
         } catch (err) {
             console.error("Failed to load settings:", err);
         }
     }
     defaultNamePatternInput.value = settings.defaultNamePattern;
     autoResetAfterMergeInput.checked = settings.autoResetAfterMerge;
+    individualPageSaveAsInput.checked = settings.individualPageSaveAs;
+}
+
+function openDownloadHandleDb() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DOWNLOAD_DIR_DB, 1);
+        request.onupgradeneeded = () => request.result.createObjectStore(DOWNLOAD_DIR_STORE);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+async function saveDownloadDirectoryHandle(handle) {
+    const db = await openDownloadHandleDb();
+    await new Promise((resolve, reject) => {
+        const tx = db.transaction(DOWNLOAD_DIR_STORE, "readwrite");
+        tx.objectStore(DOWNLOAD_DIR_STORE).put(handle, DOWNLOAD_DIR_KEY);
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+    });
+    db.close();
+}
+
+async function loadDownloadDirectoryHandle() {
+    if (!("showDirectoryPicker" in window) || !("indexedDB" in window)) {
+        updateDownloadDirStatus();
+        return;
+    }
+    try {
+        const db = await openDownloadHandleDb();
+        downloadDirectoryHandle = await new Promise((resolve, reject) => {
+            const tx = db.transaction(DOWNLOAD_DIR_STORE, "readonly");
+            const request = tx.objectStore(DOWNLOAD_DIR_STORE).get(DOWNLOAD_DIR_KEY);
+            request.onsuccess = () => resolve(request.result || null);
+            request.onerror = () => reject(request.error);
+        });
+        db.close();
+    } catch (err) {
+        console.error("Failed to load download directory:", err);
+        downloadDirectoryHandle = null;
+    }
+    updateDownloadDirStatus();
+}
+
+async function clearDownloadDirectoryHandle() {
+    downloadDirectoryHandle = null;
+    try {
+        const db = await openDownloadHandleDb();
+        await new Promise((resolve, reject) => {
+            const tx = db.transaction(DOWNLOAD_DIR_STORE, "readwrite");
+            tx.objectStore(DOWNLOAD_DIR_STORE).delete(DOWNLOAD_DIR_KEY);
+            tx.oncomplete = resolve;
+            tx.onerror = () => reject(tx.error);
+        });
+        db.close();
+    } catch (err) {
+        console.error("Failed to clear download directory:", err);
+    }
+    updateDownloadDirStatus();
+}
+
+function updateDownloadDirStatus() {
+    if (!downloadDirStatus) return;
+    chooseDownloadDirBtn.textContent = "Choose Folder";
+    if (!window.isSecureContext) {
+        downloadDirStatus.textContent = "Folder selection needs HTTPS or localhost";
+        chooseDownloadDirBtn.disabled = true;
+        clearDownloadDirBtn.disabled = true;
+        return;
+    }
+    if (!("showDirectoryPicker" in window)) {
+        downloadDirStatus.textContent = isFirefoxLikeBrowser()
+            ? "Firefox uses its own Downloads settings"
+            : "Folder selection is not supported by this browser";
+        chooseDownloadDirBtn.textContent = "Browser Settings";
+        chooseDownloadDirBtn.disabled = false;
+        clearDownloadDirBtn.disabled = true;
+        return;
+    }
+    chooseDownloadDirBtn.disabled = false;
+    clearDownloadDirBtn.disabled = !downloadDirectoryHandle;
+    downloadDirStatus.textContent = downloadDirectoryHandle
+        ? `Selected: ${downloadDirectoryHandle.name}`
+        : "Default browser Downloads folder";
+}
+
+async function saveBlobToDownloadLocation(blob, filename) {
+    if (!downloadDirectoryHandle) {
+        triggerBrowserDownload(blob, filename);
+        return "browser";
+    }
+
+    try {
+        let permission = "granted";
+        if ("queryPermission" in downloadDirectoryHandle) {
+            permission = await downloadDirectoryHandle.queryPermission({ mode: "readwrite" });
+        }
+        if (permission !== "granted" && "requestPermission" in downloadDirectoryHandle) {
+            permission = await downloadDirectoryHandle.requestPermission({ mode: "readwrite" });
+        }
+        if (permission !== "granted") {
+            triggerBrowserDownload(blob, filename);
+            showNoticeToast("Folder access skipped", "Using the browser download folder instead.", "warning");
+            return "browser";
+        }
+        const fileHandle = await downloadDirectoryHandle.getFileHandle(filename, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        return "folder";
+    } catch (err) {
+        console.error("Failed to save to selected folder:", err);
+        triggerBrowserDownload(blob, filename);
+        showNoticeToast("Folder save failed", "Using the browser download folder instead.", "warning");
+        return "browser";
+    }
+}
+
+async function saveBlobWithSaveAs(blob, filename) {
+    const fileHandle = await pickSaveAsHandle(filename);
+    if (!fileHandle) {
+        triggerBrowserDownload(blob, filename);
+        return "browser";
+    }
+    return writeBlobToFileHandle(fileHandle, blob, filename);
+}
+
+async function pickSaveAsHandle(filename) {
+    if (!window.isSecureContext) {
+        showNoticeToast("Save As unavailable", "Use localhost or HTTPS to open the system file picker.", "warning");
+        return null;
+    }
+    if (!("showSaveFilePicker" in window)) {
+        if (isFirefoxLikeBrowser()) {
+            showNoticeToast("Firefox Save As", "Firefox controls Save As from its Downloads settings. If enabled, the next download will ask where to save.", "info");
+        } else {
+            showNoticeToast("Save As unavailable", "This browser does not support the system file picker.", "warning");
+        }
+        return null;
+    }
+
+    try {
+        return await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [{
+                description: "PDF document",
+                accept: { "application/pdf": [".pdf"] }
+            }]
+        });
+    } catch (err) {
+        if (err.name === "AbortError") return "cancelled";
+        console.error("Save As picker failed:", err);
+        showNoticeToast("Save As failed", "Unable to open the system file picker.", "warning");
+        return null;
+    }
+}
+
+async function writeBlobToFileHandle(fileHandle, blob, filename = "download.pdf") {
+    try {
+        const writable = await fileHandle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        return "save-as";
+    } catch (err) {
+        if (err.name === "AbortError") return "cancelled";
+        console.error("Save As failed:", err);
+        triggerBrowserDownload(blob, filename);
+        showNoticeToast("Save As failed", "Using the browser download panel instead.", "warning");
+        return "browser";
+    }
+}
+
+function triggerBrowserDownload(blob, filename) {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
 }
 
 function captureSnapshot() {
@@ -265,6 +462,11 @@ function rotatePageById(id) {
     const img = card?.querySelector("img");
     if (img) updateImageTransform(img, pageToRotate.rotation);
     saveSession();
+}
+
+function getPageDisplayLabel(page) {
+    const splitLabel = page.splitPart ? ` • Split ${page.splitPart}` : "";
+    return `${page.originalFile} • Pg ${page.originalPage}${splitLabel}`;
 }
 
 // --- FILE SELECTION & DRAG DROP LOGIC ---
@@ -489,7 +691,7 @@ function renderPages() {
         label.style.background = "color-mix(in srgb, var(--surface) 94%, transparent)";
         label.style.borderColor = "var(--border)";
         label.style.color = "var(--text-muted)";
-        label.textContent = `${p.originalFile} • Pg ${p.originalPage}`;
+        label.textContent = getPageDisplayLabel(p);
         div.appendChild(label);
 
         // Buttons
@@ -510,6 +712,20 @@ function renderPages() {
         rotateBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.664 0l3.181-3.183m-4.991-2.695v4.992h-4.992" /></svg>`;
         buttonGroup.appendChild(rotateBtn);
         div.appendChild(buttonGroup);
+
+        const singleDownloadBtn = document.createElement("button");
+        singleDownloadBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v11m0 0l-4-4m4 4l4-4M5 21h14" /></svg>`;
+        singleDownloadBtn.className = "absolute bottom-6 left-2 border rounded-full w-8 h-8 md:w-7 md:h-7 flex items-center justify-center transition shadow-sm z-20 opacity-100 md:opacity-0 md:group-hover:opacity-100";
+        singleDownloadBtn.style.background = "color-mix(in srgb, var(--surface) 94%, transparent)";
+        singleDownloadBtn.style.borderColor = "var(--border)";
+        singleDownloadBtn.style.color = "var(--icon-fg)";
+        singleDownloadBtn.setAttribute("aria-label", `Download ${getPageDisplayLabel(p)}`);
+        singleDownloadBtn.title = "Download this page";
+        singleDownloadBtn.onclick = (e) => {
+            e.stopPropagation();
+            downloadSinglePage(p, singleDownloadBtn);
+        };
+        div.appendChild(singleDownloadBtn);
 
         const delBtn = document.createElement("button");
         delBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>`;
@@ -567,6 +783,8 @@ function renderPages() {
 
 async function generateThumbnail(pageId, filename, pageIndex) {
     try {
+        const pageData = pages.find(p => p.id === pageId);
+        if (!pageData) return;
         let pdfDoc = loadedPdfDocs[filename];
         if (!pdfDoc) {
             if (!fileMap[filename]) return;
@@ -583,21 +801,45 @@ async function generateThumbnail(pageId, filename, pageIndex) {
         canvas.height = viewport.height;
 
         await pdfPage.render({ canvasContext: context, viewport }).promise;
+        const outputCanvas = cropRenderedCanvas(canvas, pageData.crop);
 
-        canvas.toBlob((blob) => {
+        outputCanvas.toBlob((blob) => {
             const url = URL.createObjectURL(blob);
             pageCache[pageId] = url;
 
             const currentEl = document.querySelector(`div[data-id="${pageId}"]`);
             if (currentEl) {
-                const pageData = pages.find(p => p.id === pageId);
-                if (pageData) appendImageToCard(currentEl, url, pageData);
+                appendImageToCard(currentEl, url, pageData);
             }
         }, "image/jpeg", 0.7);
 
     } catch (error) {
         console.error(`Error rendering page ${pageId}:`, error);
     }
+}
+
+function cropRenderedCanvas(canvas, crop) {
+    if (!crop || typeof crop.top !== "number" || typeof crop.bottom !== "number") return canvas;
+
+    const top = Math.max(0, Math.min(0.95, crop.top));
+    const bottom = Math.max(top + 0.05, Math.min(1, crop.bottom));
+    const sourceY = Math.round(canvas.height * top);
+    const sourceHeight = Math.max(1, Math.round(canvas.height * (bottom - top)));
+    const cropped = document.createElement("canvas");
+    cropped.width = canvas.width;
+    cropped.height = sourceHeight;
+    cropped.getContext("2d").drawImage(
+        canvas,
+        0,
+        sourceY,
+        canvas.width,
+        sourceHeight,
+        0,
+        0,
+        cropped.width,
+        cropped.height
+    );
+    return cropped;
 }
 
 function appendImageToCard(container, src, pageData) {
@@ -641,6 +883,8 @@ function resetApplication() {
     pendingFiles = [];
     renderingQueue = [];
     isRendering = false;
+    selectedPageId = null;
+    activeModalPage = null;
 
     Object.keys(pageCache).forEach((id) => URL.revokeObjectURL(pageCache[id]));
     pageCache = {};
@@ -679,10 +923,13 @@ function resetApplication() {
     localStorage.removeItem(SESSION_STORAGE_KEY);
 }
 
-function showSuccessToast(summary) {
+function showSuccessToast(summary, title = "Merge complete", showStartAction = true) {
     const summaryText = summary || "Download started. Start a new merge?";
+    const titleEl = successToast.querySelector(".font-semibold");
     const summaryEl = successToast.querySelector(".subtle-text");
+    if (titleEl) titleEl.textContent = title;
     if (summaryEl) summaryEl.textContent = summaryText;
+    startNewMergeBtn.classList.toggle("hidden", !showStartAction);
     successToast.classList.remove("hidden");
     if (successToastTimer) clearTimeout(successToastTimer);
     successToastTimer = setTimeout(() => {
@@ -832,6 +1079,63 @@ function updateMergeButtonState() {
     newNameInput.disabled = !hasPages;
 }
 
+function getSinglePageFileName(page) {
+    const base = (page.originalFile || "page")
+        .replace(/\.pdf$/i, "")
+        .replace(/[^a-zA-Z0-9-_]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "")
+        .substring(0, 40) || "page";
+    const splitSuffix = page.splitPart ? `-split-${page.splitPart.toLowerCase()}` : "";
+    return `${base}-page-${page.originalPage}${splitSuffix}.pdf`;
+}
+
+async function downloadSinglePage(page, button) {
+    const filename = getSinglePageFileName(page);
+    const newName = filename.replace(/\.pdf$/i, "");
+    if (button) button.disabled = true;
+
+    try {
+        const saveAsHandle = settings.individualPageSaveAs
+            ? await pickSaveAsHandle(filename)
+            : null;
+        if (saveAsHandle === "cancelled") return;
+
+        const res = await fetch("/merge", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ order: [page], fileMap, newName }),
+        });
+
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || "Page download failed");
+        }
+
+        const blob = await res.blob();
+        const saveMode = saveAsHandle
+            ? await writeBlobToFileHandle(saveAsHandle, blob, filename)
+            : settings.individualPageSaveAs
+                ? (triggerBrowserDownload(blob, filename), "browser-save-as")
+                : await saveBlobToDownloadLocation(blob, filename);
+
+        if (saveMode === "cancelled") return;
+        const destination = saveMode === "save-as"
+            ? "Saved"
+            : saveMode === "folder"
+                ? `Saved to ${downloadDirectoryHandle.name}`
+                : saveMode === "browser-save-as"
+                    ? "Sent to browser Save As"
+                : "Download started";
+        showSuccessToast(`${destination}: ${filename}`, "Page downloaded", false);
+    } catch (err) {
+        console.error("Single page download error:", err);
+        showNoticeToast("Page download failed", err.message || "Unable to download this page.", "error");
+    } finally {
+        if (button) button.disabled = false;
+    }
+}
+
 // --- MERGE LOGIC ---
 mergeBtn.addEventListener("click", async () => {
     if (!pages.length) {
@@ -852,17 +1156,12 @@ mergeBtn.addEventListener("click", async () => {
             const mergedPagesCount = pages.length;
             const sourceFilesCount = uploadedFiles.length;
             const blob = await res.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `${newName}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(url);
+            const filename = `${newName}.pdf`;
+            const saveMode = await saveBlobToDownloadLocation(blob, filename);
 
             setLoadingState(mergeBtn, false, "Done!");
-            showSuccessToast(`Downloaded ${newName}.pdf • ${mergedPagesCount} pages from ${sourceFilesCount} file${sourceFilesCount === 1 ? "" : "s"}.`);
+            const destination = saveMode === "folder" ? `Saved to ${downloadDirectoryHandle.name}` : "Download started";
+            showSuccessToast(`${destination}: ${filename} • ${mergedPagesCount} pages from ${sourceFilesCount} file${sourceFilesCount === 1 ? "" : "s"}.`);
             localStorage.removeItem(SESSION_STORAGE_KEY);
             if (settings.autoResetAfterMerge) {
                 setTimeout(() => resetApplication(), 1000);
@@ -917,6 +1216,37 @@ autoResetAfterMergeInput.addEventListener("change", () => {
     settings.autoResetAfterMerge = autoResetAfterMergeInput.checked;
     saveSettings();
 });
+individualPageSaveAsInput.addEventListener("change", () => {
+    settings.individualPageSaveAs = individualPageSaveAsInput.checked;
+    saveSettings();
+});
+chooseDownloadDirBtn.addEventListener("click", async () => {
+    if (!window.isSecureContext) {
+        showNoticeToast("Folder selection unavailable", "Use localhost or HTTPS to choose a download folder.", "warning");
+        return;
+    }
+    if (!("showDirectoryPicker" in window)) {
+        if (isFirefoxLikeBrowser()) {
+            showNoticeToast("Firefox download settings", "Open Firefox Settings > General > Files and Applications to choose the download folder or always ask where to save.", "info");
+        } else {
+            showNoticeToast("Unsupported browser", "This browser controls downloads in its own settings.", "warning");
+        }
+        return;
+    }
+    try {
+        const handle = await window.showDirectoryPicker({ mode: "readwrite" });
+        downloadDirectoryHandle = handle;
+        await saveDownloadDirectoryHandle(handle);
+        updateDownloadDirStatus();
+        showNoticeToast("Folder selected", `Individual and merged files can save to ${handle.name}.`, "info");
+    } catch (err) {
+        if (err.name !== "AbortError") {
+            console.error("Download folder selection failed:", err);
+            showNoticeToast("Folder selection failed", "Unable to use that folder.", "error");
+        }
+    }
+});
+clearDownloadDirBtn.addEventListener("click", clearDownloadDirectoryHandle);
 
 dismissWalkthroughBtn.addEventListener("click", () => {
     walkthroughCard.classList.add("hidden");
@@ -937,8 +1267,7 @@ document.addEventListener("keydown", (e) => {
         if (!noticeToast.classList.contains("hidden")) noticeToast.classList.add("hidden");
         if (!undoToast.classList.contains("hidden")) clearUndoToast();
         if (!modalOverlay.classList.contains("hidden")) {
-            modalOverlay.classList.add("hidden");
-            modalImage.src = "";
+            closeModal();
         }
         return;
     }
@@ -979,11 +1308,28 @@ const modalOverlay = document.getElementById("modalOverlay");
 const modalImage = document.getElementById("modalImage");
 const modalClose = document.getElementById("modalClose");
 const modalLoader = document.getElementById("modalLoader");
+const modalPageStage = document.getElementById("modalPageStage");
+const splitLineHandle = document.getElementById("splitLineHandle");
+const splitPositionRange = document.getElementById("splitPositionRange");
+const applySplitBtn = document.getElementById("applySplitBtn");
+const cancelSplitBtn = document.getElementById("cancelSplitBtn");
 
 async function openModal(page) {
+    activeModalPage = page;
+    splitLinePercent = 50;
+    splitPositionRange.value = String(splitLinePercent);
+    updateSplitLinePosition();
     modalOverlay.classList.remove("hidden");
     modalImage.classList.add("hidden");
+    splitLineHandle.classList.add("hidden");
     modalLoader.classList.remove("hidden");
+
+    modalImage.onload = () => {
+        modalLoader.classList.add("hidden");
+        modalImage.classList.remove("hidden");
+        splitLineHandle.classList.remove("hidden");
+        updateSplitLinePosition();
+    };
 
     // Check Cache first
     if (highResPageCache[page.id]) {
@@ -994,18 +1340,91 @@ async function openModal(page) {
     }
 
     modalImage.style.transform = `rotate(${page.rotation || 0}deg)`;
-
-    // When image loads, show it
-    modalImage.onload = () => {
-        modalLoader.classList.add("hidden");
-        modalImage.classList.remove("hidden");
-    };
+    if (modalImage.complete && modalImage.src) modalImage.onload();
 }
 
 document.getElementById("modalClose").addEventListener("click", () => {
+    closeModal();
+});
+
+function closeModal() {
     modalOverlay.classList.add("hidden");
     modalImage.src = "";
+    activeModalPage = null;
+    splitLineHandle.classList.add("hidden");
+}
+
+function updateSplitLinePosition() {
+    if (!splitLineHandle) return;
+    splitLineHandle.style.top = `${splitLinePercent}%`;
+}
+
+function setSplitLineFromClientY(clientY) {
+    const rect = modalImage.getBoundingClientRect();
+    if (!rect.height) return;
+    const percent = ((clientY - rect.top) / rect.height) * 100;
+    splitLinePercent = Math.max(10, Math.min(90, percent));
+    splitPositionRange.value = String(Math.round(splitLinePercent));
+    updateSplitLinePosition();
+}
+
+function splitActivePage() {
+    if (!activeModalPage) return;
+    const pageIndex = pages.findIndex(p => p.id === activeModalPage.id);
+    if (pageIndex < 0) return;
+
+    const ratio = Math.max(0.1, Math.min(0.9, splitLinePercent / 100));
+    const snapshot = captureSnapshot();
+    const source = pages[pageIndex];
+    const sourceTop = source.crop?.top ?? 0;
+    const sourceBottom = source.crop?.bottom ?? 1;
+    const splitAt = sourceTop + (sourceBottom - sourceTop) * ratio;
+    const baseId = `${source.id}_split_${Date.now()}`;
+    const topPage = {
+        ...source,
+        id: `${baseId}_top`,
+        crop: { top: sourceTop, bottom: splitAt },
+        splitPart: "A"
+    };
+    const bottomPage = {
+        ...source,
+        id: `${baseId}_bottom`,
+        crop: { top: splitAt, bottom: sourceBottom },
+        splitPart: "B"
+    };
+
+    pages.splice(pageIndex, 1, topPage, bottomPage);
+    releasePageMemory(source.id);
+    selectedPageId = topPage.id;
+    closeModal();
+    renderPages();
+    showUndoToast("Page split into two pages", snapshot);
+    saveSession();
+}
+
+splitPositionRange.addEventListener("input", () => {
+    splitLinePercent = Number(splitPositionRange.value) || 50;
+    updateSplitLinePosition();
 });
+
+modalImage.addEventListener("click", (e) => {
+    if (!activeModalPage || modalImage.classList.contains("hidden")) return;
+    setSplitLineFromClientY(e.clientY);
+});
+
+splitLineHandle.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    splitLineHandle.setPointerCapture(e.pointerId);
+    setSplitLineFromClientY(e.clientY);
+});
+
+splitLineHandle.addEventListener("pointermove", (e) => {
+    if (!splitLineHandle.hasPointerCapture(e.pointerId)) return;
+    setSplitLineFromClientY(e.clientY);
+});
+
+applySplitBtn.addEventListener("click", splitActivePage);
+cancelSplitBtn.addEventListener("click", closeModal);
 
 // Helper for High Res
 async function getHighResPageDataUrl(page) {
@@ -1024,9 +1443,10 @@ async function getHighResPageDataUrl(page) {
         canvas.width = viewport.width;
         canvas.height = viewport.height;
         await pdfPage.render({ canvasContext: context, viewport }).promise;
+        const outputCanvas = cropRenderedCanvas(canvas, page.crop);
 
         return await new Promise((resolve) => {
-            canvas.toBlob((blob) => {
+            outputCanvas.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 highResPageCache[page.id] = url;
                 resolve(url);
@@ -1070,6 +1490,7 @@ themeToggle.addEventListener('click', () => {
 });
 
 loadSettings();
+loadDownloadDirectoryHandle();
 updateRangeInputVisibility();
 loadSession();
 if (!pages.length) renderPages();
